@@ -1,0 +1,20 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 12
+    },
+    "configurePresets": [
+      {
+        "name": "windows-vcpkg",
+        "hidden": false,
+        "description": "Use vcpkg toolchain and place build files in build/",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/build",
+        "cacheVariables": {
+          "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+      }
+    ]
+  }
+  

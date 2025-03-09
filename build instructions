@@ -1,0 +1,10 @@
+# Clean rebuild
+rm -rf build 
+
+cmake --preset=windows-vcpkg
+cmake --build build
+
+
+# To test: in two separate terminals run the following commands
+build\technologies\zeromq\ZeroMQConsumerTest.exe
+build\technologies\zeromq\ZeroMQPublisherTest.exe
