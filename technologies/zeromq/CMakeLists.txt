@@ -24,6 +24,10 @@ add_library(ZeroMQLib
 # Ensure the library includes necessary headers
 target_include_directories(ZeroMQLib PRIVATE ../../core/interfaces ${ZMQ_INCLUDE_DIR})
 
+# Link libstdc++ statically to avoid runtime errors
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+
+
 # Force the compiler to recognize the include path
 target_compile_options(ZeroMQLib PRIVATE "-I${ZMQ_INCLUDE_DIR}")
 
