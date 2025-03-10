@@ -11,11 +11,22 @@ public:
 };
 
 int main() {
-    std::cout << "ZeroMQPublisherApp started" << std::endl << std::flush;
-    ZeroMQPublisherApp app;
-    app.parse_config("test_scenarios/1pub1sub1topics10msg5000ms/config.json");
-    app.run();
-    std::cout << "ZeroMQPublisherApp finished" << std::endl << std::flush;
+    std::cout << "[ZeroMQPublisherApp] Start" << std::endl << std::flush;
+    try {
+        ZeroMQPublisherApp app;
+        std::cout << "[ZeroMQPublisherApp] Parsing config file" << std::endl;
+        app.parse_config("test_scenarios/2pub2sub2topics10msg5000ms/config.json");
+        std::cout << "[ZeroMQPublisherApp] Creating publisher" << std::endl;
+        app.create_publisher();
+        std::cout << "[ZeroMQPublisherApp] Running publisher" << std::endl;
+        app.run();
+        std::cout << "[ZeroMQPublisherApp] Finished execution" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "[ZeroMQPublisherApp] Exception caught: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[ZeroMQPublisherApp] Unknown exception caught!" << std::endl;
+    }
+    std::cout << "[ZeroMQPublisherApp] End" << std::endl << std::flush;
     return 0;
 }
 

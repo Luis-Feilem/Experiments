@@ -12,12 +12,13 @@ ZeroMQConsumer::~ZeroMQConsumer() {
 }
 
 void ZeroMQConsumer::initialize(const std::string &endpoint, const std::string &topic) {
+    std::cout << "[ZeroMQ Consumer] Connecting to " << endpoint << " and subscribing to topic: " << topic << std::endl;
     try {
         subscriber.connect(endpoint);
         subscribe(topic);
-        std::cout << "[ZeroMQ Consumer] Connected to " << endpoint << " and subscribed to topic: " << topic << std::endl << std::flush;
+        std::cout << "[ZeroMQ Consumer] Connected to " << endpoint << " and subscribed to topic: " << topic << std::endl;
     } catch (const zmq::error_t &e) {
-        std::cerr << "[ZeroMQ Consumer] Initialization failed: " << e.what() << std::endl << std::flush;
+        std::cerr << "[ZeroMQ Consumer] Initialization failed: " << e.what() << std::endl;
     }
 }
 

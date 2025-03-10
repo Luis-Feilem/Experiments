@@ -2,13 +2,13 @@
     "scenario_name": "Test with 2 publishers and 2 consumers",
     "publishers": [
       {
-        "id": 1,
+        "id": "P1",
         "topic": "A",
         "messages": 10,
-        "update_every": 5000
+        "update_every": 5000000
       },
       {
-        "id": 2,
+        "id": "P2",
         "topic": "B",
         "messages": 10,
         "update_every": 5000
@@ -16,11 +16,11 @@
     ],
     "consumers": [
       {
-        "id": 1,
+        "id": "C1",
         "subscribed_topic": "A"
       },
       {
-        "id": 2,
+        "id": "C2",
         "subscribed_topic": "B"
       }
     ]
