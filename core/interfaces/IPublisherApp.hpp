@@ -1,0 +1,87 @@
+#ifndef IPUBLISHER_APP_HPP
+#define IPUBLISHER_APP_HPP
+
+#include <string>
+#include <memory>
+#include <thread>
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <fstream>
+
+#include "../../technologies/zeromq/ZeroMQPublisher.hpp" // Add new publishers here
+
+class IPublisherApp {
+protected:
+    int id;
+    std::string topic;
+    int message_count;
+    int update_every;
+
+    std::unique_ptr<IPublisher> publisher;
+
+public:
+    virtual ~IPublisherApp() = default;
+
+    // Parses configuration details from JSON file
+    virtual void parse_config(const std::string& config_path) {
+        std::ifstream config_file(config_path);
+        if (!config_file.is_open()) {
+            throw std::runtime_error("Failed to open config file");
+        }
+
+        nlohmann::json config;
+        config_file >> config;
+
+        std::string container_id = std::getenv("CONTAINER_ID") ? std::getenv("CONTAINER_ID") : "1";
+        if (container_id.empty()) {
+            throw std::runtime_error("CONTAINER_ID environment variable is not set");
+        }
+
+        for (const auto& pub : config["publishers"]) {
+            if (pub["id"] == container_id) {
+                id = pub["id"];
+                topic = pub["topic"];
+                message_count = pub["messages"];
+                update_every = pub.value("update_every", 1000000);
+                std::cout << "[PublisherApp] Loaded config for " << container_id 
+                          << " - Topic: " << topic 
+                          << ", Messages: " << message_count 
+                          << ", Update every: " << update_every << "us" << std::endl;
+                break;
+            }
+        }
+    }
+
+    // Factory Method to Create Publisher
+    virtual void create_publisher() {
+        std::string technology = std::getenv("TECHNOLOGY");
+        if (technology == "ZeroMQ") {
+            publisher = std::make_unique<ZeroMQPublisher>();
+        } 
+        // Extend here for new technologies
+        else {
+            throw std::runtime_error("Unsupported technology: " + technology);
+        }
+    }
+
+    // Runs the publisher logic (can now be fully generalized)
+    virtual void run() {
+        
+        std::string endpoint = std::getenv("DOCKER_ENDPOINT") ? 
+                               std::getenv("DOCKER_ENDPOINT") : 
+                               "tcp://127.0.0.1:5555";
+
+        publisher->initialize(endpoint);
+
+        for (int i = 0; i < message_count; ++i) {
+            std::string message = "Message " + std::to_string(i + 1) + " on topic " + topic;
+            publisher->send_message(message);
+            std::this_thread::sleep_for(std::chrono::microseconds(update_every));
+        }
+
+        // Send termination signal (poison pill)
+        publisher->send_message("__END__");
+    }
+};
+
+#endif // IPUBLISHER_APP_HPP

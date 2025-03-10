@@ -15,6 +15,9 @@ file(TO_CMAKE_PATH "${ZMQ_LIB_DIR}" ZMQ_LIB_DIR)
 message(STATUS "ZeroMQ Include Dir: ${ZMQ_INCLUDE_DIR}")
 message(STATUS "ZeroMQ Lib Dir: ${ZMQ_LIB_DIR}")
 
+# Find nlohmann-json package
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Create a library for ZeroMQ publisher and consumer
 add_library(ZeroMQLib
     ZeroMQPublisher.cpp
@@ -23,25 +26,20 @@ add_library(ZeroMQLib
 
 # Ensure the library includes necessary headers
 target_include_directories(ZeroMQLib PRIVATE ../../core/interfaces ${ZMQ_INCLUDE_DIR})
-
-# Link libstdc++ statically to avoid runtime errors
-set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-
-
-# Force the compiler to recognize the include path
 target_compile_options(ZeroMQLib PRIVATE "-I${ZMQ_INCLUDE_DIR}")
 
 # Link ZeroMQ correctly
 target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib")
 
-# Create test executables
-add_executable(ZeroMQPublisherTest ZeroMQPublisherTest.cpp)
-add_executable(ZeroMQConsumerTest ZeroMQConsumerTest.cpp)
+# Static linking for libstdc++ and libgcc
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
-# Ensure the test executables also inherit the include path
-target_include_directories(ZeroMQPublisherTest PRIVATE ${ZMQ_INCLUDE_DIR})
-target_include_directories(ZeroMQConsumerTest PRIVATE ${ZMQ_INCLUDE_DIR})
+# Create executable for Publisher App
+add_executable(ZeroMQPublisherApp ZeroMQPublisherApp.cpp)
+target_include_directories(ZeroMQPublisherApp PRIVATE ${ZMQ_INCLUDE_DIR})
+target_link_libraries(ZeroMQPublisherApp PRIVATE ZeroMQLib nlohmann_json::nlohmann_json)
 
-# Link test executables to ZeroMQLib
-target_link_libraries(ZeroMQPublisherTest PRIVATE ZeroMQLib)
-target_link_libraries(ZeroMQConsumerTest PRIVATE ZeroMQLib)
+# Create executable for Consumer App
+add_executable(ZeroMQConsumerApp ZeroMQConsumerApp.cpp)
+target_include_directories(ZeroMQConsumerApp PRIVATE ${ZMQ_INCLUDE_DIR})
+target_link_libraries(ZeroMQConsumerApp PRIVATE ZeroMQLib nlohmann_json::nlohmann_json)

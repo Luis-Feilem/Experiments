@@ -1,0 +1,18 @@
+{
+    "scenario_name": "Test with 1 publishers and 1 consumers",
+    "publishers": [
+      {
+        "id": 1,
+        "topic": "A",
+        "messages": 10,
+        "update_every": 5000
+      }
+    ],
+    "consumers": [
+      {
+        "id": 1,
+        "subscribed_topic": "A"
+      }
+    ]
+  }
+  
