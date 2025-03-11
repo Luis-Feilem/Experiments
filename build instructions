@@ -29,3 +29,5 @@ docker run --name publisher --network benchmark-net zeromq-publisher
 
 # To create a container with an entrypoint (a shell, for example) different than specified in its Dockerfile
 docker run -it --entrypoint /bin/bash zeromq-consumer 
+
+# We are using the orchestrator_env conda environment for the orchestrator 
