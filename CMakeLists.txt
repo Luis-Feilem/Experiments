@@ -10,8 +10,7 @@ if (NOT CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "../vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 endif()
 
-# Enable fetching vcpkg dependencies
-find_package(ZeroMQ REQUIRED)
-
-# Add subdirectories (compile technologies separately)
-add_subdirectory(technologies/zeromq)
+# Only add subdirectory for Windows builds (local)
+if(WIN32)
+    add_subdirectory(technologies/zeromq)
+endif()

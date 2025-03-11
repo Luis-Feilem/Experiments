@@ -1,13 +1,25 @@
 # Inherit from base image
 FROM base-image:latest
 
-# Install ZeroMQ
+# Install ZeroMQ and nlohmann-json (technology-specific dependencies)
 RUN apt-get update && \
-    apt-get install -y libzmq3-dev && \
+    apt-get install -y libczmq-dev nlohmann-json3-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Rebuild to ensure ZeroMQ is linked properly
-RUN cmake -B build && cmake --build build
+# Copy ZeroMQ-specific files
+COPY ./technologies/zeromq /app/technologies/zeromq
 
-# Define working directory for ZeroMQ components
-WORKDIR /app/build/technologies/zeromq
+# Build ZeroMQ components using the correct target directory
+WORKDIR /app
+RUN cmake -B ./build -S . \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DCMAKE_VERBOSE_MAKEFILE=ON && cmake --build ./build
+
+RUN ls -la ./build
+    
+
+# Ensure the binary has execution permissions
+# RUN chmod +x ./build/technologies/zeromq/ZeroMQPublisherApp ./build/technologies/zeromq/ZeroMQConsumerApp

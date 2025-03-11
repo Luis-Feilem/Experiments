@@ -4,7 +4,7 @@ FROM zeromq-image:latest
 # Set environment variables for consumer config
 ENV CONTAINER_ID="C1"
 ENV TECHNOLOGY="ZeroMQ"
-ENV DOCKER_ENDPOINT="tcp://127.0.0.1:5555"
+ENV DOCKER_ENDPOINT="tcp://broker:5555"
 
 # Run the consumer app
-CMD ["./ZeroMQConsumerApp"]
+CMD ["/app/build/technologies/zeromq/ZeroMQConsumerApp"]

@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Convert vcpkg install path to absolute path
-get_filename_component(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows" ABSOLUTE)
-
-# Ensure ZeroMQ headers and libraries are included
-set(ZMQ_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/include")
-set(ZMQ_LIB_DIR "${VCPKG_INSTALLED_DIR}/lib")
-
-# Normalize Windows paths (handles both / and \)
-file(TO_CMAKE_PATH "${ZMQ_INCLUDE_DIR}" ZMQ_INCLUDE_DIR)
-file(TO_CMAKE_PATH "${ZMQ_LIB_DIR}" ZMQ_LIB_DIR)
+# Platform-specific settings
+if(WIN32)
+    # Use vcpkg paths on Windows
+    set(ZMQ_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows/include")
+    set(ZMQ_LIB_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows/lib")
+elseif(UNIX)
+    # Use system paths on Ubuntu/Docker
+    set(ZMQ_INCLUDE_DIR "/usr/include")
+    set(ZMQ_LIB_DIR "/usr/lib/x86_64-linux-gnu")
+endif()
 
 # Debugging output (after resolving absolute paths)
 message(STATUS "ZeroMQ Include Dir: ${ZMQ_INCLUDE_DIR}")
 message(STATUS "ZeroMQ Lib Dir: ${ZMQ_LIB_DIR}")
 
-# Find nlohmann-json package
+# Find nlohmann-json package (should work on both Windows and Ubuntu)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 # Create a library for ZeroMQ publisher and consumer
@@ -29,7 +29,11 @@ target_include_directories(ZeroMQLib PRIVATE ../../core/interfaces ${ZMQ_INCLUDE
 target_compile_options(ZeroMQLib PRIVATE "-I${ZMQ_INCLUDE_DIR}")
 
 # Link ZeroMQ correctly
-target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib")
+if (WIN32)
+    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib")
+elseif(UNIX)
+    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq.so")
+endif()
 
 # Static linking for libstdc++ and libgcc
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
