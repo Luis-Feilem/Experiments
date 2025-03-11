@@ -7,4 +7,4 @@ ENV TECHNOLOGY="ZeroMQ"
 ENV DOCKER_ENDPOINT="tcp://broker:5555"
 
 # Run the consumer app
-CMD ["/app/build/technologies/zeromq/ZeroMQConsumerApp"]
+ENTRYPOINT ["/app/build/ZeroMQConsumerApp"]

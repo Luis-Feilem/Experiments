@@ -11,11 +11,11 @@ elseif(UNIX)
     set(ZMQ_LIB_DIR "/usr/lib/x86_64-linux-gnu")
 endif()
 
-# Debugging output (after resolving absolute paths)
+# Debugging output
 message(STATUS "ZeroMQ Include Dir: ${ZMQ_INCLUDE_DIR}")
 message(STATUS "ZeroMQ Lib Dir: ${ZMQ_LIB_DIR}")
 
-# Find nlohmann-json package (should work on both Windows and Ubuntu)
+# Find nlohmann-json package
 find_package(nlohmann_json CONFIG REQUIRED)
 
 # Create a library for ZeroMQ publisher and consumer
@@ -29,11 +29,7 @@ target_include_directories(ZeroMQLib PRIVATE ../../core/interfaces ${ZMQ_INCLUDE
 target_compile_options(ZeroMQLib PRIVATE "-I${ZMQ_INCLUDE_DIR}")
 
 # Link ZeroMQ correctly
-if (WIN32)
-    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib")
-elseif(UNIX)
-    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq.so")
-endif()
+target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq.so")
 
 # Static linking for libstdc++ and libgcc
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
@@ -47,3 +43,7 @@ target_link_libraries(ZeroMQPublisherApp PRIVATE ZeroMQLib nlohmann_json::nlohma
 add_executable(ZeroMQConsumerApp ZeroMQConsumerApp.cpp)
 target_include_directories(ZeroMQConsumerApp PRIVATE ${ZMQ_INCLUDE_DIR})
 target_link_libraries(ZeroMQConsumerApp PRIVATE ZeroMQLib nlohmann_json::nlohmann_json)
+
+# Register executables as top-level targets (critical step!)
+add_custom_target(build-publisher DEPENDS ZeroMQPublisherApp)
+add_custom_target(build-consumer DEPENDS ZeroMQConsumerApp)

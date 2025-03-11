@@ -7,4 +7,4 @@ ENV TECHNOLOGY="ZeroMQ"
 ENV DOCKER_ENDPOINT="tcp://broker:5555"
 
 # Run the publisher app
-CMD ["/app/build/technologies/zeromq/ZeroMQPublisherApp"]
+ENTRYPOINT ["/app/build/ZeroMQPublisherApp"]
