@@ -1,0 +1,19 @@
+# Base image with system-level dependencies
+FROM ubuntu:22.04
+
+# Install common build tools and libraries
+RUN apt-get update && \
+    apt-get install -y build-essential cmake g++ && \
+    rm -rf /var/lib/apt/lists/*
+
+# Define common working directory
+WORKDIR /app
+
+# Copy project files (technology-specific Dockerfile can override this)
+COPY . /app
+
+# Common build step (can be overridden)
+RUN cmake -B build && cmake --build build
+
+# Common entry point placeholder (to be overridden)
+ENTRYPOINT ["/bin/bash"]

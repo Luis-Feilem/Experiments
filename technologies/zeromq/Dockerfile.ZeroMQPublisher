@@ -1,0 +1,10 @@
+# Inherit from ZeroMQ image
+FROM zeromq-image:latest
+
+# Set environment variables for publisher config
+ENV CONTAINER_ID="P1"
+ENV TECHNOLOGY="ZeroMQ"
+ENV DOCKER_ENDPOINT="tcp://127.0.0.1:5555"
+
+# Run the publisher app
+CMD ["./ZeroMQPublisherApp"]
