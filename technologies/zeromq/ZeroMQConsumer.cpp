@@ -37,9 +37,23 @@ std::string ZeroMQConsumer::receive_message() {
         if (!result) {
             std::cerr << "[ZeroMQ Consumer] Failed to receive message!" << std::endl << std::flush;
         }
+
         std::string message(static_cast<char *>(zmq_message.data()), zmq_message.size());
-        std::cout << "[ZeroMQ Consumer] Received: " << message << std::endl << std::flush;
-        return message;
+
+        // Split out the topic
+        size_t space_pos = message.find(' ');
+        std::string topic = message.substr(0, space_pos);
+        std::string payload = message.substr(space_pos + 1);
+
+        std::cout << "[ZeroMQ Consumer] Received on topic: " << topic << " -> " << payload << std::endl << std::flush;
+
+        // Handle poison pill termination
+        if (payload == "__END__") {
+            std::cout << "[ConsumerApp] Received termination signal. Stopping." << std::endl;
+            exit(0); // Clean exit
+        }
+
+        return payload;
     } catch (const zmq::error_t &e) {
         std::cerr << "[ZeroMQ Consumer] Receive failed: " << e.what() << std::endl << std::flush;
         return "";
