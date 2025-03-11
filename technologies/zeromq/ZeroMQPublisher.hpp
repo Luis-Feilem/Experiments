@@ -15,7 +15,7 @@ public:
     ~ZeroMQPublisher();
 
     void initialize(const std::string &endpoint) override;
-    void send_message(const std::string &message) override;
+    void send_message(const std::string &message, const std::string &topic) override;
 };
 
 #endif // ZEROMQ_PUBLISHER_HPP

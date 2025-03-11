@@ -19,6 +19,7 @@ int main() {
         std::cout << "[ZeroMQPublisherApp] Creating publisher" << std::endl;
         app.create_publisher();
         std::cout << "[ZeroMQPublisherApp] Running publisher" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         app.run();
         std::cout << "[ZeroMQPublisherApp] Finished execution" << std::endl;
     } catch (const std::exception &e) {

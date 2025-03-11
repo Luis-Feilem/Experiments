@@ -81,14 +81,14 @@ public:
 
         for (int i = 0; i < message_count; ++i) {
             std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topic " << topic << std::endl;
-            std::string message = "Message " + std::to_string(i + 1) + " on topic " + topic;
-            publisher->send_message(message);
+            std::string message = "Message " + std::to_string(i + 1) + " [END] to topic: " + topic;
+            publisher->send_message(message, topic);
             std::cout << "[IPublisherApp] Sent message " << i + 1 << ". Now sleeping for " << update_every << "us" << std::endl;
             std::this_thread::sleep_for(std::chrono::microseconds(update_every));
         }
 
         // Send termination signal (poison pill)
-        publisher->send_message("__END__");
+        publisher->send_message("__END__", topic);
         std::cout << "[IPublisherApp] Sent termination signal" << std::endl;
     }
 };

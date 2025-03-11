@@ -11,7 +11,7 @@ public:
     virtual void initialize(const std::string &endpoint) = 0;
 
     // Sends a message
-    virtual void send_message(const std::string &message) = 0;
+    virtual void send_message(const std::string &message, const std::string &topic) = 0;
 };
 
 #endif // IPUBLISHER_HPP
