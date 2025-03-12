@@ -41,6 +41,8 @@ class ScenarioManager:
     def __init__(self, config_path = None):
         self.config_path = config_path
         self.config = None
+        if config_path is not None:
+            self.load_config(config_path)
 
     def load_config(self, config_path = None):
         if config_path is None:
@@ -55,10 +57,12 @@ class ScenarioManager:
     def validate_config(self, config = None):
         if config is None:
             config = self.config
+        if config is None:
+            raise ValueError(f"No config provided ({config}) nor loaded.")
         if 'publishers' not in config:
-            raise ValueError("Invalid config: missing 'publishers' section")
+            raise ValueError(f"Invalid config: missing 'publishers' section ({config})")
         if 'consumers' not in config:
-            raise ValueError("Invalid config: missing 'consumers' section")
+            raise ValueError(f"Invalid config: missing 'consumers' section ({config})")
         for pub in config['publishers']:
             self.validate_publisher(pub)
         for sub in config['consumers']:
@@ -66,13 +70,13 @@ class ScenarioManager:
         return True
             
     def validate_publisher(self, pub):
-        for i in ['id', 'topic', 'messages', 'update_every']:
+        for i in ['id', 'topics', 'messages', 'update_every']:
             if i not in pub:
                 raise ValueError(f"Publisher config missing '{i}': {pub}")
         return True
     
     def validate_consumer(self, consumer):
-        for i in ['id', 'subscribed_topics']:
+        for i in ['id', 'topics']:
             if i not in consumer:
                 raise ValueError(f"Consumer config missing '{i}': {consumer}")
         return True

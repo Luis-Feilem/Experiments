@@ -41,6 +41,8 @@ void ZeroMQConsumer::initialize() {
 void ZeroMQConsumer::subscribe(const std::string &topic) {
     std::cout << "[ZeroMQ Consumer] Subscribing to topic: " << topic << std::endl;
     subscriber.set(zmq::sockopt::subscribe, topic);
+    // Set a timeout for receiving messages (10s)
+    subscriber.setsockopt(ZMQ_RCVTIMEO, 10000);
 }
 
 std::string ZeroMQConsumer::receive_message() {

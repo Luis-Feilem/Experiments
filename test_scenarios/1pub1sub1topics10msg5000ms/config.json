@@ -5,7 +5,7 @@
         "id": "P1",
         "topics": ["A"],
         "messages": 10,
-        "update_every": 5000000
+        "update_every": 500000
       }
     ],
     "consumers": [

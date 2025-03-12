@@ -40,19 +40,25 @@ class ContainerManager:
     
     
     
-    def __init__(self):
+    def __init__(self, network_name="benchmark_network"):
         self.client = docker.from_env()
         self.containers = []
+        try:
+            self.network = self.client.networks.get(network_name)
+            self.network_name = network_name
+        except docker.errors.NotFound:
+            self.network = self.client.networks.create(network_name, driver="bridge")
+            self.network_name = network_name
         
-    
-    def return_container_ids(self, method):
+    @staticmethod
+    def return_container_ids(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
             # Execute the original method
             result = method(self, *args, **kwargs)
 
             # Add container IDs to the return value (or create one if result is None)
-            container_ids = [container.id for container in self.containers]
+            container_ids = [container.name for container in self.containers]
             if result is None:
                 return container_ids
             elif isinstance(result, tuple):
@@ -61,7 +67,8 @@ class ContainerManager:
                 return result, container_ids
         return wrapper
         
-    def validate_container(self, method):
+    @staticmethod
+    def validate_container(method):
         @wraps(method)
         def wrapper(self, container_id, *args, **kwargs):
             container = next((c for c in self.containers if c.id == container_id), None)
@@ -70,7 +77,8 @@ class ContainerManager:
             return method(self, container, *args, **kwargs)
         return wrapper
 
-    def validate_publisher_config(self, method):
+    @staticmethod
+    def validate_publisher_config(method):
         @wraps(method)
         def wrapper(self, config, *args, **kwargs):
             for i in ['id', 'topics', 'messages', 'update_every']:
@@ -79,20 +87,23 @@ class ContainerManager:
             return method(self, config, *args, **kwargs)
         return wrapper
         
-    @validate_publisher_config
     @return_container_ids
+    @validate_publisher_config
     def start_publisher(self, config, tech_name, paused = True):
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
         try:
+            environment={
+                "CONTAINER_ID": config['id'],
+                "TOPICS": ','.join(config['topics']),
+                "MESSAGES": config['messages'],
+                "UPDATE_EVERY": config['update_every']
+            }
+            print(f"Environment: {environment}")
             container = self.client.containers.run(
                 name=f"{tech_name}_{config['id']}",
                 image=f"{tech_name}-publisher",
-                environment={
-                    "CONTAINER_ID": config['id'],
-                    "TOPICS": ','.join(config['topics']),
-                    "MESSAGES": config['messages'],
-                    "UPDATE_EVERY": config['update_every']
-                },
+                environment=environment,
+                network=self.network_name,
                 detach=True
             )
             self.containers.append(container)
@@ -100,9 +111,10 @@ class ContainerManager:
                 container.pause()
         except docker.errors.DockerException as e:
             raise ValueError(f"Failed to start publisher {config['id']}") from e
-        return container.id
+        return container.name
 
-    def validate_consumer_config(self, method):
+    @staticmethod
+    def validate_consumer_config(method):
         @wraps(method)
         def wrapper(self, config, *args, **kwargs):
             for i in ['id', 'topics']:
@@ -111,8 +123,8 @@ class ContainerManager:
             return method(self, config, *args, **kwargs)
         return wrapper
     
-    @validate_consumer_config
     @return_container_ids
+    @validate_consumer_config
     def start_consumer(self, config, tech_name, paused = True):
         print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
         try:
@@ -123,6 +135,7 @@ class ContainerManager:
                     "CONTAINER_ID": config['id'],
                     "TOPICS": ','.join(config['topics'])
                 },
+                network=self.network_name,
                 detach=True
             )
             self.containers.append(container)
@@ -130,7 +143,7 @@ class ContainerManager:
                 container.pause()
         except docker.errors.DockerException as e:
             raise ValueError(f"Failed to start consumer {config['id']}") from e
-        return container.id
+        return container.name
 
     def wake_all(self):
         print("Waking all containers...")
@@ -181,5 +194,5 @@ class ContainerManager:
         container.wait()
     
     def is_healthy(self, container_id):
-        status = self.client.containers.get(container_id).attrs['State']['Health']['Status']
+        status = self.client.containers.get(container_id).attrs['Health']
         return status == 'healthy'

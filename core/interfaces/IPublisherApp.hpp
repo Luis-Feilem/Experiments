@@ -66,6 +66,8 @@ public:
         else {
             throw std::runtime_error("Unsupported technology: " + technology);
         }
+        message_count = std::stoi(std::getenv("MESSAGES"));
+        update_every = std::stoi(std::getenv("UPDATE_EVERY"));
     }
 
     // Runs the publisher logic (can now be fully generalized)
@@ -77,7 +79,7 @@ public:
 
         std::cout << "[IPublisherApp] Initializing publisher with endpoint: " << endpoint << std::endl;
         publisher->initialize();
-        std::cout << "[IPublisherApp] Initialized publisher" << std::endl;
+        std::cout << "[IPublisherApp] Initialized publisher. It will send " << message_count << " messages every " << update_every << " us" << std::endl;
 
         for (int i = 0; i < message_count; ++i) {
             std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topic " << topic << std::endl;
