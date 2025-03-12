@@ -40,10 +40,14 @@ class BenchmarkManager:
             print(f"Running scenario {scenario} using technology {technology}")
             print("Starting and pausing all containers...")
             for pub_config in scenario_manager.get_publishers():
-                container_manager.start_publisher(pub_config, tech_name)
+                container_id = container_manager.start_publisher(pub_config, tech_name)
+                if not container_manager.is_healthy(container_id):
+                    raise ValueError(f"Publisher {pub_config['id']} failed to start correctly.")
 
             for sub_config in scenario_manager.get_consumers():
-                container_manager.start_consumer(sub_config, tech_name)
+                container_id = container_manager.start_consumer(sub_config, tech_name)
+                if not container_manager.is_healthy(container_id):
+                    raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
                 
             print("All containers started. Unpausing...")
             container_manager.wake_all()

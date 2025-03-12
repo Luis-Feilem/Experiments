@@ -83,19 +83,24 @@ class ContainerManager:
     @return_container_ids
     def start_publisher(self, config, tech_name, paused = True):
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
-        container = self.client.containers.run(
-            image=f"{tech_name}-publisher",
-            environment={
-                "CONTAINER_ID": config['id'],
-                "TOPICS": ','.join(config['topics']),
-                "MESSAGES": config['messages'],
-                "UPDATE_EVERY": config['update_every']
-            },
-            detach=True
-        )
-        self.containers.append(container)
-        if paused:
-            container.pause()
+        try:
+            container = self.client.containers.run(
+                name=f"{tech_name}_{config['id']}",
+                image=f"{tech_name}-publisher",
+                environment={
+                    "CONTAINER_ID": config['id'],
+                    "TOPICS": ','.join(config['topics']),
+                    "MESSAGES": config['messages'],
+                    "UPDATE_EVERY": config['update_every']
+                },
+                detach=True
+            )
+            self.containers.append(container)
+            if paused:
+                container.pause()
+        except docker.errors.DockerException as e:
+            raise ValueError(f"Failed to start publisher {config['id']}") from e
+        return container.id
 
     def validate_consumer_config(self, method):
         @wraps(method)
@@ -110,17 +115,22 @@ class ContainerManager:
     @return_container_ids
     def start_consumer(self, config, tech_name, paused = True):
         print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
-        container = self.client.containers.run(
-            image=f"{tech_name}-consumer",
-            environment={
-                "CONTAINER_ID": config['id'],
-                "TOPICS": ','.join(config['topics'])
-            },
-            detach=True
-        )
-        self.containers.append(container)
-        if paused:
-            container.pause()
+        try:
+            container = self.client.containers.run(
+                name=f"{tech_name}_{config['id']}",
+                image=f"{tech_name}-consumer",
+                environment={
+                    "CONTAINER_ID": config['id'],
+                    "TOPICS": ','.join(config['topics'])
+                },
+                detach=True
+            )
+            self.containers.append(container)
+            if paused:
+                container.pause()
+        except docker.errors.DockerException as e:
+            raise ValueError(f"Failed to start consumer {config['id']}") from e
+        return container.id
 
     def wake_all(self):
         print("Waking all containers...")
@@ -170,3 +180,6 @@ class ContainerManager:
         container = self.client.containers.get(container_id)
         container.wait()
     
+    def is_healthy(self, container_id):
+        status = self.client.containers.get(container_id).attrs['State']['Health']['Status']
+        return status == 'healthy'
