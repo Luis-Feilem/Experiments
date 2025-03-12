@@ -11,7 +11,7 @@
     "consumers": [
       {
         "id": "C1",
-        "subscribed_topics": ["A"]
+        "topics": ["A"]
       }
     ]
   }

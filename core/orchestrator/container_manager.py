@@ -113,6 +113,7 @@ class ContainerManager:
         container = self.client.containers.run(
             image=f"{tech_name}-consumer",
             environment={
+                "CONTAINER_ID": config['id'],
                 "TOPICS": ','.join(config['topics'])
             },
             detach=True

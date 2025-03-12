@@ -17,11 +17,11 @@
     "consumers": [
       {
         "id": "C1",
-        "subscribed_topics": ["A"]
+        "topics": ["A"]
       },
       {
         "id": "C2",
-        "subscribed_topics": ["B"]
+        "topics": ["B"]
       }
     ]
   }
