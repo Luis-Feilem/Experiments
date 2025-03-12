@@ -2,7 +2,6 @@
 FROM zeromq-image:latest
 
 # Set environment variables for consumer config
-ENV CONTAINER_ID="C1"
 ENV TECHNOLOGY="ZeroMQ"
 ENV DOCKER_ENDPOINT="tcp://broker:5555"
 

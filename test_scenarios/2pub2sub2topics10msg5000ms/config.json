@@ -3,13 +3,13 @@
     "publishers": [
       {
         "id": "P1",
-        "topic": "A",
+        "topics": ["A"],
         "messages": 10,
         "update_every": 5000
       },
       {
         "id": "P2",
-        "topic": "B",
+        "topics": ["B"],
         "messages": 10,
         "update_every": 5000
       }
@@ -17,11 +17,11 @@
     "consumers": [
       {
         "id": "C1",
-        "subscribed_topic": "A"
+        "subscribed_topics": ["A"]
       },
       {
         "id": "C2",
-        "subscribed_topic": "B"
+        "subscribed_topics": ["B"]
       }
     ]
   }

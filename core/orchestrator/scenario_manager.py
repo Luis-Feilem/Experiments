@@ -3,52 +3,100 @@ import json
 
 class ScenarioManager:
     """
-    ScenarioManager is a class responsible for managing and validating the configuration
-    of a scenario, which includes publishers and consumers.
+    ScenarioManager is a class responsible for managing scenarios based on a configuration file.
+    It provides methods to load, validate, and retrieve information about publishers and consumers.
     Attributes:
-        config_path (str): The path to the configuration file.
-        config (dict): The loaded configuration data.
+        config_path (str): Path to the configuration file.
+        config (dict): Loaded configuration data.
     Methods:
-        __init__(config_path):
-            Initializes the ScenarioManager with the given configuration path and loads the configuration.
-        load_config():
-            Loads the configuration from the file specified by config_path and validates it.
-        validate_config(config):
-            Validates the configuration to ensure it contains the required 'publishers' and 'consumers' sections.
+        __init__(config_path=None):
+            Initializes the ScenarioManager with an optional configuration file path.
+        load_config(config_path=None):
+            Loads the configuration from the specified path or the instance's config_path.
+            Raises ValueError if no config_path is provided.
+        validate_config(config=None):
+            Validates the configuration, ensuring required sections and fields are present.
+            Raises ValueError if the configuration is invalid.
+        validate_publisher(pub):
+            Validates a publisher configuration, ensuring required fields are present.
+            Raises ValueError if any required field is missing.
+        validate_consumer(consumer):
+            Validates a consumer configuration, ensuring required fields are present.
+            Raises ValueError if any required field is missing.
         get_publishers():
             Returns the list of publishers from the configuration.
+        get_publishers_ids():
+            Returns a list of publisher IDs from the configuration.
+        get_publisher_by_id(pub_id):
+            Returns the publisher configuration with the specified ID, or None if not found.
         get_consumers():
             Returns the list of consumers from the configuration.
-        get_duration():
-            Returns the duration from the configuration, defaulting to 5000 if not specified.
+        get_consumers_ids():
+            Returns a list of consumer IDs from the configuration.
+        get_consumer_by_id(sub_id):
+            Returns the consumer configuration with the specified ID, or None if not found.
     """
-    def __init__(self, config_path):
+    
+    
+    def __init__(self, config_path = None):
         self.config_path = config_path
-        self.config = self.load_config()
+        self.config = None
 
-    def load_config(self):
-        with open(self.config_path, 'r', encoding='utf-8') as file:
+    def load_config(self, config_path = None):
+        if config_path is None:
+            config_path = self.config_path
+        if self.config_path is None:
+            raise ValueError("No config_path provided")
+        with open(config_path, 'r', encoding='utf-8') as file:
             config = json.load(file)
-        self.validate_config(config)
-        return config
+        self.config = config
+        return self.config
 
-    def validate_config(self, config):
-        if 'publishers' not in config or 'consumers' not in config:
-            raise ValueError("Invalid config: missing 'publishers' or 'consumers'")
-
+    def validate_config(self, config = None):
+        if config is None:
+            config = self.config
+        if 'publishers' not in config:
+            raise ValueError("Invalid config: missing 'publishers' section")
+        if 'consumers' not in config:
+            raise ValueError("Invalid config: missing 'consumers' section")
         for pub in config['publishers']:
-            if 'id' not in pub or 'topics' not in pub:
-                raise ValueError(f"Invalid publisher config: {pub}")
-
+            self.validate_publisher(pub)
         for sub in config['consumers']:
-            if 'id' not in sub or 'topics' not in sub:
-                raise ValueError(f"Invalid consumer config: {sub}")
+            self.validate_consumer(sub)
+        return True
+            
+    def validate_publisher(self, pub):
+        for i in ['id', 'topic', 'messages', 'update_every']:
+            if i not in pub:
+                raise ValueError(f"Publisher config missing '{i}': {pub}")
+        return True
+    
+    def validate_consumer(self, consumer):
+        for i in ['id', 'subscribed_topics']:
+            if i not in consumer:
+                raise ValueError(f"Consumer config missing '{i}': {consumer}")
+        return True
 
     def get_publishers(self):
         return self.config['publishers']
+    
+    def get_publishers_ids(self):
+        return [pub['id'] for pub in self.config['publishers']]
+    
+    def get_publisher_by_id(self, pub_id):
+        for pub in self.config['publishers']:
+            if pub['id'] == pub_id:
+                return pub
+        return None
 
     def get_consumers(self):
         return self.config['consumers']
+    
+    def get_consumers_ids(self):
+        return [sub['id'] for sub in self.config['consumers']]
 
-    def get_duration(self):
-        return self.config.get('duration', 5000)
+    def get_consumer_by_id(self, sub_id):
+        for sub in self.config['consumers']:
+            if sub['id'] == sub_id:
+                return sub
+        return None

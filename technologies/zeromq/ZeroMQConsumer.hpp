@@ -14,7 +14,7 @@ public:
     ZeroMQConsumer();
     ~ZeroMQConsumer();
 
-    void initialize(const std::string &endpoint, const std::string &topic) override;
+    void initialize() override;
     void subscribe(const std::string &topic) override;
     std::string receive_message() override;
 };

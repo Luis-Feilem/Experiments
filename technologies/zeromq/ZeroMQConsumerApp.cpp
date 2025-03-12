@@ -15,8 +15,6 @@ int main() {
 
     try {
         ZeroMQConsumerApp app;
-        std::cout << "[ZeroMQConsumerApp] Parsing config file" << std::endl;
-        app.parse_config("test_scenarios/1pub1sub1topics10msg5000ms/config.json");
         std::cout << "[ZeroMQConsumerApp] Creating consumer" << std::endl;
         app.create_consumer();
         std::cout << "[ZeroMQConsumerApp] Running consumer" << std::endl;

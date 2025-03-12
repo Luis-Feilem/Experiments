@@ -18,34 +18,34 @@ protected:
 public:
     virtual ~IConsumerApp() = default;
 
-    // Parses configuration details from JSON file
-    virtual void parse_config(const std::string& config_path) {
-        std::cout << "[IConsumerApp] Parsing config file: " << config_path << std::endl;
-        std::ifstream config_file(config_path);
-        if (!config_file.is_open()) {
-            throw std::runtime_error("Failed to open config file");
-        }
+    // // Parses configuration details from JSON file
+    // virtual void parse_config(const std::string& config_path) {
+    //     std::cout << "[IConsumerApp] Parsing config file: " << config_path << std::endl;
+    //     std::ifstream config_file(config_path);
+    //     if (!config_file.is_open()) {
+    //         throw std::runtime_error("Failed to open config file");
+    //     }
 
-        nlohmann::json config;
-        config_file >> config;
+    //     nlohmann::json config;
+    //     config_file >> config;
 
-        std::string container_id = std::getenv("CONTAINER_ID") ? std::getenv("CONTAINER_ID") : "C1";
-        if (container_id.empty()) {
-            throw std::runtime_error("CONTAINER_ID environment variable is not set");
-        }
+    //     std::string container_id = std::getenv("CONTAINER_ID") ? std::getenv("CONTAINER_ID") : "C1";
+    //     if (container_id.empty()) {
+    //         throw std::runtime_error("CONTAINER_ID environment variable is not set");
+    //     }
         
 
-        for (const auto& con : config["consumers"]) {
-            std::cout << "[IConsumerApp] Checking config for " << con["id"] << std::endl;
-            if (con["id"] == container_id) {
-                id = con["id"];
-                subscribed_topic = con["subscribed_topic"];
-                std::cout << "[IConsumerApp] Loaded config for " << container_id 
-                          << " - Subscribed to: " << subscribed_topic << std::endl;
-                break;
-            }
-        }
-    }
+    //     for (const auto& con : config["consumers"]) {
+    //         std::cout << "[IConsumerApp] Checking config for " << con["id"] << std::endl;
+    //         if (con["id"] == container_id) {
+    //             id = con["id"];
+    //             subscribed_topic = con["subscribed_topic"];
+    //             std::cout << "[IConsumerApp] Loaded config for " << container_id 
+    //                       << " - Subscribed to: " << subscribed_topic << std::endl;
+    //             break;
+    //         }
+    //     }
+    // }
 
     // Factory Method to Create Consumer
     virtual void create_consumer() {
@@ -70,7 +70,7 @@ public:
 
         std::cout << "[IConsumerApp] Initializing consumer with endpoint: " << endpoint 
                   << " and topic: " << subscribed_topic << std::endl;
-        consumer->initialize(endpoint, subscribed_topic);
+        consumer->initialize();
         std::cout << "[IConsumerApp] Initialized consumer" << std::endl;
 
         while (true) {

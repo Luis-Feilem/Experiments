@@ -1,7 +1,7 @@
 {
     "scenarios": [
-      "test_scenarios/1pub1sub1topics10msg5000ms",
-      "test_scenarios/2pub2sub2topics10msg5000ms"
+      "1pub1sub1topics10msg5000ms",
+      "2pub2sub2topics10msg5000ms"
     ],
     "technologies": [
       "zeromq",

@@ -14,8 +14,6 @@ int main() {
     std::cout << "[ZeroMQPublisherApp] Start" << std::endl << std::flush;
     try {
         ZeroMQPublisherApp app;
-        std::cout << "[ZeroMQPublisherApp] Parsing config file" << std::endl;
-        app.parse_config("test_scenarios/2pub2sub2topics10msg5000ms/config.json");
         std::cout << "[ZeroMQPublisherApp] Creating publisher" << std::endl;
         app.create_publisher();
         std::cout << "[ZeroMQPublisherApp] Running publisher" << std::endl;

@@ -29,7 +29,12 @@ target_include_directories(ZeroMQLib PRIVATE ../../core/interfaces ${ZMQ_INCLUDE
 target_compile_options(ZeroMQLib PRIVATE "-I${ZMQ_INCLUDE_DIR}")
 
 # Link ZeroMQ correctly
-target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq.so")
+if(WIN32)
+    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib")
+elseif(UNIX)
+    target_link_libraries(ZeroMQLib PRIVATE "${ZMQ_LIB_DIR}/libzmq.so")
+endif()
+
 
 # Static linking for libstdc++ and libgcc
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")

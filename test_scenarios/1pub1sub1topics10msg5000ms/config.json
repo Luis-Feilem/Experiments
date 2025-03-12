@@ -3,7 +3,7 @@
     "publishers": [
       {
         "id": "P1",
-        "topic": "A",
+        "topics": ["A"],
         "messages": 10,
         "update_every": 5000000
       }
@@ -11,7 +11,7 @@
     "consumers": [
       {
         "id": "C1",
-        "subscribed_topic": "A"
+        "subscribed_topics": ["A"]
       }
     ]
   }

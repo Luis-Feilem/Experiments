@@ -2,27 +2,37 @@ import os
 
 class TechnologyManager:
     """
-    A class to manage technology configurations and validations.
+    TechnologyManager is responsible for managing and validating Dockerfiles for different technology components.
     Attributes:
-    ----------
-    tech_path : str
-        The path to the technology directory.
+        tech_path (str): The file path to the technology directory.
+        tech_name (str): The name of the technology, derived from the tech_path.
     Methods:
-    -------
-    validate_technology():
-        Validates the presence of a Dockerfile in the technology directory.
-    get_tech_name():
-        Returns the name of the technology based on the directory name.
+        __init__(tech_path):
+            Initializes the TechnologyManager with the given technology path.
+        validate_technology():
+            Raises a ValueError if any of the required Dockerfiles are missing.
+        base_dockerfile():
+            Returns the path to the base Dockerfile.
+        publisher_dockerfile():
+            Returns the path to the publisher Dockerfile.
+        consumer_dockerfile():
+            Returns the path to the consumer Dockerfile.
     """
     
     def __init__(self, tech_path):
         self.tech_path = tech_path
-        self.validate_technology()
+        self.tech_name = os.path.basename(tech_path)
 
     def validate_technology(self):
-        dockerfile = os.path.join(self.tech_path, "Dockerfile")
-        if not os.path.exists(dockerfile):
-            raise ValueError(f"Missing Dockerfile in {self.tech_path}")
-
-    def get_tech_name(self):
-        return os.path.basename(self.tech_path)
+        for f in [self.base_dockerfile(), self.publisher_dockerfile(), self.consumer_dockerfile()]:
+            if not os.path.exists(f):
+                raise ValueError(f"Missing {f} in {self.tech_path}")
+    
+    def base_dockerfile(self):
+        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name)
+    
+    def publisher_dockerfile(self):
+        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name + "Publisher")
+    
+    def consumer_dockerfile(self):
+        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name + "Consumer")
