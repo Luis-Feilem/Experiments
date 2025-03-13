@@ -61,4 +61,4 @@ class BenchmarkManager:
         finally:
             print("Cleaning up...")
             container_manager.stop_all()
-            container_manager.remove_all()
+            # container_manager.remove_all()

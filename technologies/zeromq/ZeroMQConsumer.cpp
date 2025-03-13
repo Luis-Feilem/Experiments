@@ -15,11 +15,12 @@ ZeroMQConsumer::~ZeroMQConsumer() {
 }
 
 void ZeroMQConsumer::initialize() {
-    const char* endpoint = std::getenv("DOCKER_ENDPOINT");
+    const char* network = std::getenv("NETWORK");
     const char* topics = std::getenv("TOPICS");
-    if (!endpoint || !topics) {
-        throw std::runtime_error("DOCKER_ENDPOINT or TOPICS environment variable not set.");
+    if (!network || !topics) {
+        throw std::runtime_error("NETWORK or TOPICS environment variable not set.");
     }
+    std::string endpoint = "tcp://" + std::string(std::getenv("NETWORK")) + ":5555";
 
     std::cout << "[ZeroMQ Consumer] Connecting to " << endpoint << std::endl;
     try {

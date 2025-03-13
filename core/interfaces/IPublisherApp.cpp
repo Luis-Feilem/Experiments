@@ -41,8 +41,8 @@ void IPublisherApp::create_publisher() {
 // Runs the publisher logic (can now be fully generalized)
 void IPublisherApp::run() {
     std::cout << "[IPublisherApp] Running publisher" << std::endl;
-    std::string endpoint = std::getenv("DOCKER_ENDPOINT") ? 
-                            std::getenv("DOCKER_ENDPOINT") : 
+    std::string endpoint = std::getenv("NETWORK") ?
+                            "tcp://" + std::string(std::getenv("NETWORK")) + ":5555" :
                             "tcp://127.0.0.1:5555";
 
     std::cout << "[IPublisherApp] Initializing publisher with endpoint: " << endpoint << std::endl;

@@ -39,7 +39,6 @@ class ContainerManager:
     """
     
     
-    
     def __init__(self, network_name="benchmark_network"):
         self.client = docker.from_env()
         self.containers = []
@@ -93,6 +92,7 @@ class ContainerManager:
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
         try:
             environment={
+                "NETWORK": self.network_name,
                 "CONTAINER_ID": config['id'],
                 "TOPICS": ','.join(config['topics']),
                 "MESSAGES": config['messages'],
@@ -128,13 +128,15 @@ class ContainerManager:
     def start_consumer(self, config, tech_name, paused = True):
         print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
         try:
+            environment = {
+                "NETWORK": self.network_name,
+                "CONTAINER_ID": config['id'],
+                "TOPICS": ','.join(config['topics'])
+            }
             container = self.client.containers.run(
                 name=f"{tech_name}_{config['id']}",
                 image=f"{tech_name}-consumer",
-                environment={
-                    "CONTAINER_ID": config['id'],
-                    "TOPICS": ','.join(config['topics'])
-                },
+                environment=environment,
                 network=self.network_name,
                 detach=True
             )
