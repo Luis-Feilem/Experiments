@@ -22,6 +22,8 @@ find_package(nlohmann_json CONFIG REQUIRED)
 add_library(ZeroMQLib
     ZeroMQPublisher.cpp
     ZeroMQConsumer.cpp
+    ../../core/interfaces/IPublisherApp.cpp
+    ../../core/interfaces/IConsumerApp.cpp
 )
 
 # Ensure the library includes necessary headers
