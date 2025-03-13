@@ -1,14 +1,6 @@
-#ifndef ZEROMQ_CONSUMER_APP_HPP
-#define ZEROMQ_CONSUMER_APP_HPP
-
 #include "../../core/interfaces/IConsumerApp.hpp"
 
-class ZeroMQConsumerApp : public IConsumerApp {
-public:
-    void create_consumer() override {
-        consumer = std::make_unique<ZeroMQConsumer>();
-    }
-};
+class ZeroMQConsumerApp : public IConsumerApp {};
 
 int main() {
     std::cout << "[ZeroMQConsumerApp] Start" << std::endl << std::flush;
@@ -30,5 +22,3 @@ int main() {
     return 0;
 }
 
-
-#endif // ZEROMQ_CONSUMER_APP_HPP

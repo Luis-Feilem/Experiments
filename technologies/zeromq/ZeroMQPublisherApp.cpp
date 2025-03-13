@@ -1,14 +1,6 @@
-#ifndef ZEROMQ_PUBLISHER_APP_HPP
-#define ZEROMQ_PUBLISHER_APP_HPP
-
 #include "../../core/interfaces/IPublisherApp.hpp"
 
-class ZeroMQPublisherApp : public IPublisherApp {
-public:
-    void create_publisher() override {
-        publisher = std::make_unique<ZeroMQPublisher>();
-    }
-};
+class ZeroMQPublisherApp : public IPublisherApp {};
 
 int main() {
     std::cout << "[ZeroMQPublisherApp] Start" << std::endl << std::flush;
@@ -28,6 +20,3 @@ int main() {
     std::cout << "[ZeroMQPublisherApp] End" << std::endl << std::flush;
     return 0;
 }
-
-
-#endif // ZEROMQ_PUBLISHER_APP_HPP
