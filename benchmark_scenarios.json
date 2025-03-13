@@ -3,7 +3,7 @@
       "1pub1sub1topics10msg5000ms"
     ],
     "technologies": [
-      "zeromq"
+      "zeromq_p2p"
     ]
   }
   

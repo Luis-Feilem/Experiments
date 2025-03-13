@@ -76,7 +76,7 @@ class ScenarioManager:
         return True
     
     def validate_consumer(self, consumer):
-        for i in ['id', 'topics']:
+        for i in ['id', 'endpoint', 'topics']:
             if i not in consumer:
                 raise ValueError(f"Consumer config missing '{i}': {consumer}")
         return True

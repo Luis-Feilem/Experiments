@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../../technologies/zeromq/ZeroMQPublisher.hpp" // Add new publishers here
+#include "../../technologies/zeromq_p2p/ZeroMQP2PPublisher.hpp" // Add new publishers here
 
 class IPublisherApp {
 protected:

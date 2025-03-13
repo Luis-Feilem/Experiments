@@ -27,8 +27,8 @@ void IPublisherApp::load_from_env() {
 void IPublisherApp::create_publisher() {
     std::cout << "[IPublisherApp] Creating publisher" << std::endl;
     std::string technology = std::getenv("TECHNOLOGY");
-    if (technology == "ZeroMQ") {
-        publisher = std::make_unique<ZeroMQPublisher>();
+    if (technology == "zeromq_p2p") {
+        publisher = std::make_unique<ZeroMQP2PPublisher>();
         std::cout << "[IPublisherApp] Created ZeroMQ publisher" << std::endl;
     } 
     // Extend here for new technologies
@@ -41,8 +41,8 @@ void IPublisherApp::create_publisher() {
 // Runs the publisher logic (can now be fully generalized)
 void IPublisherApp::run() {
     std::cout << "[IPublisherApp] Running publisher" << std::endl;
-    std::string endpoint = std::getenv("NETWORK") ?
-                            "tcp://" + std::string(std::getenv("NETWORK")) + ":5555" :
+    std::string endpoint = std::getenv("PUBLISHER_ENDPOINT") ?
+                            "tcp://" + std::string(std::getenv("PUBLISHER_ENDPOINT")) + ":5555" :
                             "tcp://127.0.0.1:5555";
 
     std::cout << "[IPublisherApp] Initializing publisher with endpoint: " << endpoint << std::endl;

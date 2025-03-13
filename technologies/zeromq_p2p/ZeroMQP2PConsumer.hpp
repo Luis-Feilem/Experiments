@@ -1,0 +1,22 @@
+#ifndef ZEROMQP2P_CONSUMER_HPP
+#define ZEROMQP2P_CONSUMER_HPP
+
+#include "../../core/interfaces/IConsumer.hpp"
+#include <zmq.hpp>
+#include <string>
+
+class ZeroMQP2PConsumer : public IConsumer {
+private:
+    zmq::context_t context;
+    zmq::socket_t subscriber;
+
+public:
+    ZeroMQP2PConsumer();
+    ~ZeroMQP2PConsumer();
+
+    void initialize() override;
+    void subscribe(const std::string &topic) override;
+    std::string receive_message() override;
+};
+
+#endif // ZEROMQP2P_CONSUMER_HPP

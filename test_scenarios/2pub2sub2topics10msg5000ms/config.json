@@ -3,24 +3,28 @@
     "publishers": [
       {
         "id": "P1",
+        "endpoint": "localhost",
         "topics": ["A"],
         "messages": 10,
         "update_every": 5000000
       },
       {
         "id": "P2",
+        "endpoint": "localhost",
         "topics": ["B"],
         "messages": 10,
-        "update_every": 500000
+        "update_every": 5000000
       }
     ],
     "consumers": [
       {
         "id": "C1",
+        "endpoint": "P1",
         "topics": ["A"]
       },
       {
         "id": "C2",
+        "endpoint": "P2", 
         "topics": ["B"]
       }
     ]

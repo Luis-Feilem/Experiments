@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../../technologies/zeromq/ZeroMQConsumer.hpp" // Add new consumers here
+#include "../../technologies/zeromq_p2p/ZeroMQP2PConsumer.hpp" // Add new consumers here
 
 class IConsumerApp {
 protected:

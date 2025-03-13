@@ -1,0 +1,8 @@
+# Inherit from ZeroMQ image
+FROM zeromq_p2p-image:latest
+
+# Set environment variables for publisher config
+ENV TECHNOLOGY="zeromq_p2p"
+
+# Run the publisher app
+ENTRYPOINT ["/app/build/ZeroMQPublisherAppP2P"]

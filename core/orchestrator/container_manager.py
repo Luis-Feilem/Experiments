@@ -80,7 +80,7 @@ class ContainerManager:
     def validate_publisher_config(method):
         @wraps(method)
         def wrapper(self, config, *args, **kwargs):
-            for i in ['id', 'topics', 'messages', 'update_every']:
+            for i in ['id', 'endpoint', 'topics', 'messages', 'update_every']:
                 if i not in config:
                     raise ValueError(f"Invalid publisher config: missing '{i}'")
             return method(self, config, *args, **kwargs)
@@ -90,34 +90,31 @@ class ContainerManager:
     @validate_publisher_config
     def start_publisher(self, config, tech_name, paused = True):
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
-        try:
-            environment={
-                "NETWORK": self.network_name,
-                "CONTAINER_ID": config['id'],
-                "TOPICS": ','.join(config['topics']),
-                "MESSAGES": config['messages'],
-                "UPDATE_EVERY": config['update_every']
-            }
-            print(f"Environment: {environment}")
-            container = self.client.containers.run(
-                name=f"{tech_name}_{config['id']}",
-                image=f"{tech_name}-publisher",
-                environment=environment,
-                network=self.network_name,
-                detach=True
-            )
-            self.containers.append(container)
-            if paused:
-                container.pause()
-        except docker.errors.DockerException as e:
-            raise ValueError(f"Failed to start publisher {config['id']}") from e
+        environment={
+            "CONTAINER_ID": config['id'],
+            "PUBLISHER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
+            "TOPICS": ','.join(config['topics']),
+            "MESSAGES": config['messages'],
+            "UPDATE_EVERY": config['update_every']
+        }
+        print(f"Environment: {environment}")
+        container = self.client.containers.run(
+            name=f"{tech_name}-{config['id']}",
+            image=f"{tech_name}-publisher",
+            environment=environment,
+            network=self.network_name,
+            detach=True
+        )
+        self.containers.append(container)
+        if paused:
+            container.pause()
         return container.name
 
     @staticmethod
     def validate_consumer_config(method):
         @wraps(method)
         def wrapper(self, config, *args, **kwargs):
-            for i in ['id', 'topics']:
+            for i in ['id', 'endpoint', 'topics']:
                 if i not in config:
                     raise ValueError(f"Invalid consumer config: missing '{i}'")
             return method(self, config, *args, **kwargs)
@@ -129,8 +126,8 @@ class ContainerManager:
         print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
         try:
             environment = {
-                "NETWORK": self.network_name,
                 "CONTAINER_ID": config['id'],
+                "CONSUMER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
                 "TOPICS": ','.join(config['topics'])
             }
             container = self.client.containers.run(

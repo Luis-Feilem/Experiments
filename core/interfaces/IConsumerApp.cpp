@@ -5,8 +5,8 @@
 void IConsumerApp::create_consumer() {
     std::cout << "[IConsumerApp] Creating consumer" << std::endl;
     std::string technology = std::getenv("TECHNOLOGY");
-    if (technology == "ZeroMQ") {
-        consumer = std::make_unique<ZeroMQConsumer>();
+    if (technology == "zeromq_p2p") {
+        consumer = std::make_unique<ZeroMQP2PConsumer>();
         std::cout << "[IConsumerApp] Created ZeroMQ consumer" << std::endl;
     } 
     // Extend here for new technologies
@@ -18,8 +18,8 @@ void IConsumerApp::create_consumer() {
 // Initializes and runs the consumer logic
 void IConsumerApp::run() {
     std::cout << "[IConsumerApp] Starting consumer" << std::endl;
-    std::string endpoint = std::getenv("NETWORK") ?
-                            "tcp://" + std::string(std::getenv("NETWORK")) + ":5555" :
+    std::string endpoint = std::getenv("CONSUMER_ENDPOINT") ?
+                            "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555" :
                             "tcp://127.0.0.1:5555";
 
     std::cout << "[IConsumerApp] Initializing consumer with endpoint: " << endpoint 
