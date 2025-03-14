@@ -49,13 +49,19 @@ void IPublisherApp::run() {
     publisher->initialize();
     std::cout << "[IPublisherApp] Initialized publisher. It will send " << message_count << " messages every " << update_every << " us" << std::endl;
 
-    for (int i = 0; i < message_count; ++i) {
+    int i = 0;
+    while (i < message_count - 1) {
         std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topics " << topics << std::endl;
         std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
         publisher->send_message(message);
         std::cout << "[IPublisherApp] Sent message " << i + 1 << ". Now sleeping for " << update_every << "us" << std::endl;
         std::this_thread::sleep_for(std::chrono::microseconds(update_every));
+        i++;
     }
+    std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topics " << topics << std::endl;
+    std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
+    publisher->send_message(message);
+    std::cout << "[IPublisherApp] Sent message " << i + 1 << ". Now sleeping for " << update_every << "us" << std::endl;
 
     // Send termination signal (poison pill)
     publisher->send_message("__END__");
