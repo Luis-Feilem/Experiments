@@ -5,8 +5,8 @@
         "id": "P1",
         "endpoint": "P1",
         "topics": ["A"],
-        "messages": 10,
-        "update_every": 5000000
+        "messages": 40,
+        "update_every": 500000
       }
     ],
     "consumers": [

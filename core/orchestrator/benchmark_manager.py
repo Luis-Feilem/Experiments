@@ -3,6 +3,7 @@ import json
 from .technology_manager import TechnologyManager
 from .scenario_manager import ScenarioManager
 from .container_manager import ContainerManager
+from .metrics_collector import MetricsCollector
 
 
 TECHNOLOGIES_DIR = "technologies"
@@ -11,7 +12,8 @@ SCENARIOS_DIR = "test_scenarios"
 class BenchmarkManager:
     
     
-    def __init__(self, config_path):
+    def __init__(self, config_path, metrics_interval=1.0):
+        self.interval = metrics_interval
         with open(config_path, 'r', encoding='utf-8') as file:
             self.config = json.load(file)
 
@@ -39,6 +41,7 @@ class BenchmarkManager:
             raise ValueError(f"Invalid scenario: {scenario_name}")
         scenario_manager.load_config()
         container_manager = ContainerManager()
+        metrics = MetricsCollector(tech_name, scenario_name, interval=self.interval)
 
         try:
             print(f"Using technology {tech_name} to run scenario {scenario_name} ...")
@@ -52,13 +55,15 @@ class BenchmarkManager:
                 container_id = container_manager.start_consumer(sub_config, tech_name)[0]
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
-                
+            
+            metrics.start()    
             print("All containers started. Unpausing...")
             container_manager.wake_all()
             print("All containers running...")
             container_manager.wait_for_all()
+            metrics.stop()
 
         finally:
             print("Cleaning up...")
             container_manager.stop_all()
-            # container_manager.remove_all()
+            container_manager.remove_all()
