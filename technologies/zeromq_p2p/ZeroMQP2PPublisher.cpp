@@ -45,6 +45,7 @@ void ZeroMQP2PPublisher::send_message(const std::string &message) {
             zmq::message_t zmq_message(full_message.begin(), full_message.end());
             publisher.send(zmq_message, zmq::send_flags::none);
             std::cout << "[ZeroMQP2PPublisher] Sent to topic: " << topic << std::endl;
+            std::cout << "[Publisher] Socket connected clients: " << publisher.getsockopt<int>(ZMQ_EVENTS) << std::endl;
         } catch (const zmq::error_t &e) {
             std::cerr << "[ZeroMQP2PPublisher] Send failed: " << e.what() << std::endl;
         }

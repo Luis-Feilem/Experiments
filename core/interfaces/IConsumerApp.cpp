@@ -30,6 +30,10 @@ void IConsumerApp::run() {
     while (true) {
         std::cout << "[IConsumerApp] Waiting for message..." << std::endl;
         std::string message = consumer->receive_message();
+        if (message == ""){
+            std::cout << "[IConsumerApp] Received empty message -> Stopping." << std::endl;
+            break;
+        }
         std::cout << "[ConsumerApp] Received: " << message << std::endl;
         if (message == "__END__") {
             std::cout << "[ConsumerApp] Received termination signal. Stopping." << std::endl;
