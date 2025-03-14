@@ -90,16 +90,19 @@ class ContainerManager:
     @validate_publisher_config
     def start_publisher(self, config, tech_name, paused = True):
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
+        publisher_endpoint = f"{tech_name}-{config['endpoint']}"
+        container_name = f"{tech_name}-{config['id']}"
+        publisher_endpoint = "0.0.0.0" if publisher_endpoint == container_name else publisher_endpoint
         environment={
             "CONTAINER_ID": config['id'],
-            "PUBLISHER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
+            "PUBLISHER_ENDPOINT": publisher_endpoint,
             "TOPICS": ','.join(config['topics']),
             "MESSAGES": config['messages'],
             "UPDATE_EVERY": config['update_every']
         }
         print(f"Environment: {environment}")
         container = self.client.containers.run(
-            name=f"{tech_name}-{config['id']}",
+            name=container_name,
             image=f"{tech_name}-publisher",
             environment=environment,
             network=self.network_name,
