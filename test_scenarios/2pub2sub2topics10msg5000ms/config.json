@@ -3,14 +3,14 @@
     "publishers": [
       {
         "id": "P1",
-        "endpoint": "localhost",
+        "endpoint": "P1",
         "topics": ["A"],
         "messages": 10,
         "update_every": 5000000
       },
       {
         "id": "P2",
-        "endpoint": "localhost",
+        "endpoint": "P2",
         "topics": ["B"],
         "messages": 10,
         "update_every": 5000000

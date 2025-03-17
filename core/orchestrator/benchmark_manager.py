@@ -4,7 +4,7 @@ from .technology_manager import TechnologyManager
 from .scenario_manager import ScenarioManager
 from .container_manager import ContainerManager
 from .metrics_collector import MetricsCollector
-
+from .events_logger import ContainerEventsLogger
 
 TECHNOLOGIES_DIR = "technologies"
 SCENARIOS_DIR = "test_scenarios"
@@ -62,6 +62,8 @@ class BenchmarkManager:
             print("All containers running...")
             container_manager.wait_for_all()
             metrics.stop()
+            events_logger = ContainerEventsLogger(tech_name, scenario_name)
+            events_logger.collect_logs()
 
         finally:
             print("Cleaning up...")
