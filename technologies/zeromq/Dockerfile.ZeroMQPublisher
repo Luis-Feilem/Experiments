@@ -1,8 +1,0 @@
-# Inherit from ZeroMQ image
-FROM zeromq-image:latest
-
-# Set environment variables for publisher config
-ENV TECHNOLOGY="ZeroMQ"
-
-# Run the publisher app
-ENTRYPOINT ["/app/build/ZeroMQPublisherApp"]

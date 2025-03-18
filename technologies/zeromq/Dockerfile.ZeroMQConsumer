@@ -1,8 +1,0 @@
-# Inherit from ZeroMQ image
-FROM zeromq-image:latest
-
-# Set environment variables for consumer config
-ENV TECHNOLOGY="ZeroMQ"
-
-# Run the consumer app
-ENTRYPOINT ["/app/build/ZeroMQConsumerApp"]
