@@ -1,6 +1,12 @@
 #include "IPublisherApp.hpp"
 #include "cstdlib"
 
+
+IPublisherApp::IPublisherApp(spdlog::level::level_enum log_level){
+    spdlog::set_level(log_level);
+    spdlog::debug("Constructing PublisherApp...");
+}
+
 void IPublisherApp::load_from_env() {
     const char* env_id = std::getenv("CONTAINER_ID");
     const char* env_topics = std::getenv("TOPICS");
@@ -16,20 +22,21 @@ void IPublisherApp::load_from_env() {
     message_count = std::stoi(env_messages);
     update_every = std::stoi(env_update);
 
-    std::cout << "[IPublisherApp] Loaded from environment: "
-                << "ID=" << id << ", TOPICS=" << topics
-                << ", MESSAGES=" << message_count
-                << ", UPDATE_EVERY=" << update_every << " us" << std::endl;
+    spdlog::debug("[IPublisherApp] Loaded from environment: ID=" + id 
+        + ", TOPICS=" + topics 
+        + ", MESSAGES=" + env_messages 
+        + ", UPDATE_EVERY=" + env_update + " us"
+    );
 }
 
 
 // Factory Method to Create Publisher
 void IPublisherApp::create_publisher() {
-    std::cout << "[IPublisherApp] Creating publisher" << std::endl;
+    spdlog::debug("[IPublisherApp] Creating publisher");
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology == "zeromq_p2p") {
         publisher = std::make_unique<ZeroMQP2PPublisher>();
-        std::cout << "[IPublisherApp] Created ZeroMQ publisher" << std::endl;
+        spdlog::debug("[IPublisherApp] Created ZeroMQ publisher");
     } 
     // Extend here for new technologies
     else {
@@ -40,30 +47,55 @@ void IPublisherApp::create_publisher() {
 
 // Runs the publisher logic (can now be fully generalized)
 void IPublisherApp::run() {
-    std::cout << "[IPublisherApp] Running publisher" << std::endl;
+    spdlog::debug("[IPublisherApp] Running publisher");
     std::string endpoint = std::getenv("PUBLISHER_ENDPOINT") ?
                             "tcp://" + std::string(std::getenv("PUBLISHER_ENDPOINT")) + ":5555" :
                             "tcp://127.0.0.1:5555";
 
-    std::cout << "[IPublisherApp] Initializing publisher with endpoint: " << endpoint << std::endl;
+    spdlog::debug("[IPublisherApp] Initializing publisher with endpoint: " + endpoint);
     publisher->initialize();
-    std::cout << "[IPublisherApp] Initialized publisher. It will send " << message_count << " messages every " << update_every << " us" << std::endl;
+    spdlog::debug("[IPublisherApp] Initialized publisher. It will send " + std::to_string(message_count) 
+        + " messages every " + std::to_string(update_every) + " us"
+    );
 
     int i = 0;
     while (i < message_count - 1) {
-        std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topics " << topics << std::endl;
+        spdlog::info("[IPublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
         std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
         publisher->send_message(message);
-        std::cout << "[IPublisherApp] Sent message " << i + 1 << ". Now sleeping for " << update_every << "us" << std::endl;
+        spdlog::info("[IPublisherApp] Sent message " + std::to_string(i + 1) + ". Now sleeping for " + std::to_string(update_every) + "us");
         std::this_thread::sleep_for(std::chrono::microseconds(update_every));
         i++;
     }
-    std::cout << "[IPublisherApp] Sending message " << i + 1 << " on topics " << topics << std::endl;
+    spdlog::info("[IPublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
     std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
     publisher->send_message(message);
-    std::cout << "[IPublisherApp] Sent message " << i + 1 << ". Now sleeping for " << update_every << "us" << std::endl;
+    spdlog::info("[IPublisherApp] Sent message " + std::to_string(i + 1));
+    i++;
 
     // Send termination signal (poison pill)
     publisher->send_message("__END__");
-    std::cout << "[IPublisherApp] Sent termination signal" << std::endl;
+    spdlog::debug("[IPublisherApp] Sent termination signal");
+}
+
+
+int main(int argc, char * argv[]) {
+    std::cout << "[IPublisherApp] Start" << std::endl << std::flush;
+
+    try {
+        spdlog::level::level_enum log_level = spdlog::level::from_str(argv[1]);
+        IPublisherApp app = IPublisherApp(log_level);
+        spdlog::debug("[IPublisherApp] Creating consumer");
+        app.create_publisher();
+        spdlog::debug("[IPublisherApp] Running consumer");
+        app.run();
+        spdlog::debug("[IPublisherApp] Finished execution");
+    } catch (const std::exception &e) {
+        std::cerr << "[IPublisherApp] Exception caught: {}" << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[IPublisherApp] Unknown exception caught!" << std::endl;
+    }
+    
+    spdlog::debug("[IPublisherApp] End");
+    return 0;
 }

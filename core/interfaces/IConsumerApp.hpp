@@ -5,17 +5,23 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <IConsumer.hpp>
 #include "../../technologies/zeromq_p2p/ZeroMQP2PConsumer.hpp" // Add new consumers here
 
 class IConsumerApp {
 protected:
     std::string id;
     std::string topics;
+    
+    std::shared_ptr<spdlog::logger> console = spdlog::stdout_color_mt("console");
 
     std::unique_ptr<IConsumer> consumer;
 
 public:
+    IConsumerApp(spdlog::level::level_enum log_level = spdlog::level::info);
     virtual ~IConsumerApp() = default;
 
     // Factory Method to Create Consumer

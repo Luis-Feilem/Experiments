@@ -2,12 +2,17 @@
 #include "cstdlib"
 
 
+IConsumerApp::IConsumerApp(spdlog::level::level_enum log_level){
+    spdlog::set_level(log_level);
+    spdlog::debug("[IConsumerApp] Constructing ConsumerApp...");
+}
+
 void IConsumerApp::create_consumer() {
-    std::cout << "[IConsumerApp] Creating consumer" << std::endl;
+    spdlog::debug("[IConsumerApp] Creating consumer");
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology == "zeromq_p2p") {
         consumer = std::make_unique<ZeroMQP2PConsumer>();
-        std::cout << "[IConsumerApp] Created ZeroMQ consumer" << std::endl;
+        spdlog::debug("[IConsumerApp] Created ZeroMQ consumer");
     } 
     // Extend here for new technologies
     else {
@@ -17,27 +22,49 @@ void IConsumerApp::create_consumer() {
 
 // Initializes and runs the consumer logic
 void IConsumerApp::run() {
-    std::cout << "[IConsumerApp] Starting consumer" << std::endl;
+    spdlog::debug("[IConsumerApp] Starting consumer");
     std::string endpoint = std::getenv("CONSUMER_ENDPOINT") ?
                             "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555" :
                             "tcp://127.0.0.1:5555";
 
-    std::cout << "[IConsumerApp] Initializing consumer with endpoint: " << endpoint 
-                << " and topics: " << topics << std::endl;
+    spdlog::debug("[IConsumerApp] Initializing consumer with endpoint: " + endpoint 
+                + " and topics: " + topics);
     consumer->initialize();
-    std::cout << "[IConsumerApp] Initialized consumer" << std::endl;
+    spdlog::debug("[IConsumerApp] Initialized consumer");
 
     while (true) {
-        std::cout << "[IConsumerApp] Waiting for message..." << std::endl;
+        spdlog::debug("[IConsumerApp] Waiting for message...");
         std::string message = consumer->receive_message();
         if (message == ""){
-            std::cout << "[IConsumerApp] Received empty message -> Stopping." << std::endl;
+            spdlog::info("[IConsumerApp] Received empty message -> Stopping.");
             break;
         }
-        std::cout << "[ConsumerApp] Received: " << message << std::endl;
+        spdlog::info("[ConsumerApp] Received: " + message);
         if (message == "__END__") {
-            std::cout << "[ConsumerApp] Received termination signal. Stopping." << std::endl;
+            spdlog::info("[ConsumerApp] Received termination signal. Stopping.");
             break;
         }
     }
+}
+
+
+int main(int argc, char * argv[]) {
+    std::cout << "[IConsumerApp] Start" << std::endl << std::flush;
+
+    try {
+        spdlog::level::level_enum log_level = spdlog::level::from_str(argv[1]);
+        IConsumerApp app = IConsumerApp(log_level);
+        spdlog::debug("[IConsumerApp] Creating consumer");
+        app.create_consumer();
+        spdlog::debug("[IConsumerApp] Running consumer");
+        app.run();
+        spdlog::debug("[IConsumerApp] Finished execution");
+    } catch (const std::exception &e) {
+        std::cerr << "[IConsumerApp] Exception caught: {}" << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[IConsumerApp] Unknown exception caught!" << std::endl;
+    }
+    
+    spdlog::debug("[IConsumerApp] End");
+    return 0;
 }
