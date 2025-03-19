@@ -12,6 +12,5 @@ endif()
 
 # Only add subdirectory for Windows builds (local)
 if(WIN32)
-    add_subdirectory(technologies/zeromq)
     add_subdirectory(technologies/zeromq_p2p)
 endif()

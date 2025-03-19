@@ -3,6 +3,19 @@
 #include <thread>
 #include <cstdlib>
 #include <sstream>
+#include "../../core/factory/ConsumerFactory.hpp"
+
+namespace {
+    struct Register {
+        Register() {
+            ConsumerFactory::registerConsumer("zeromq_p2p", []() -> std::unique_ptr<IConsumer> {
+                return std::make_unique<ZeroMQP2PConsumer>();
+            });
+        }
+    };
+
+    static Register reg;
+}
 
 ZeroMQP2PConsumer::ZeroMQP2PConsumer()
     : context(1), subscriber(context, ZMQ_SUB) {

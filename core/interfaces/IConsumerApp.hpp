@@ -7,9 +7,7 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-
-#include <IConsumer.hpp>
-#include "../../technologies/zeromq_p2p/ZeroMQP2PConsumer.hpp" // Add new consumers here
+#include "../factory/ConsumerFactory.hpp"
 
 class IConsumerApp {
 protected:

@@ -10,13 +10,9 @@ IConsumerApp::IConsumerApp(spdlog::level::level_enum log_level){
 void IConsumerApp::create_consumer() {
     spdlog::debug("[IConsumerApp] Creating consumer");
     std::string technology = std::getenv("TECHNOLOGY");
-    if (technology == "zeromq_p2p") {
-        consumer = std::make_unique<ZeroMQP2PConsumer>();
-        spdlog::debug("[IConsumerApp] Created ZeroMQ consumer");
-    } 
-    // Extend here for new technologies
-    else {
-        throw std::runtime_error("Unsupported technology: " + technology);
+    
+    consumer = ConsumerFactory::create(technology);
+    spdlog::debug("[IConsumerApp] Created {} consumer", technology);
     }
 }
 
