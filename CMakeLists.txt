@@ -1,16 +1,24 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 project(MessagingBenchmark)
 
-# Use C++17 for modern language features
+# message(STATUS "ROOT: Toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+
+# # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Ensure vcpkg toolchain is applied (if not already set via preset)
-if (NOT CMAKE_TOOLCHAIN_FILE)
+# Platform-specific setup
+if (WIN32)
+    message(STATUS "ROOT: Building on Windows")
+    # vcpkg integrates automatically with CMake if the toolchain file is set
     set(CMAKE_TOOLCHAIN_FILE "../vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+elseif (UNIX)
+    message(STATUS "ROOT: Building on Linux")
 endif()
 
-# Only add subdirectory for Windows builds (local)
-if(WIN32)
-    add_subdirectory(technologies/zeromq_p2p)
-endif()
+# Add subdirectories
+add_subdirectory(core)
+add_subdirectory(core/applications)
+# add_subdirectory(technologies/zeromq_p2p)
+
+# target_link_libraries(MessagingBenchmark PRIVATE core)

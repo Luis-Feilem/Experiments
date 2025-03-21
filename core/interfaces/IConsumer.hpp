@@ -2,15 +2,16 @@
 #define ICONSUMER_HPP
 
 #include <string>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include "Logger.hpp"
 
 class IConsumer {
 protected:
-    std::shared_ptr<spdlog::logger> console = spdlog::stdout_color_mt("console");
+    Logger console = Logger(Logger::LogLevel::INFO);
 
 public:
-    IConsumer(spdlog::level::level_enum log_level = spdlog::level::info);
+    inline IConsumer(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
+        console.set_level(log_level);
+    }
     virtual ~IConsumer() = default;
 
     // Initializes the consumer (e.g., connects to a broker, subscribes to a topic)

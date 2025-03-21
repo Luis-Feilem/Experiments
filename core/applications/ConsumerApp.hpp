@@ -2,25 +2,23 @@
 #define ICONSUMER_APP_HPP
 
 #include <string>
-#include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include "../factory/ConsumerFactory.hpp"
+#include "Logger.hpp"
+#include "ConsumerFactory.hpp"
 
-class IConsumerApp {
+class ConsumerApp {
 protected:
     std::string id;
     std::string topics;
     
-    std::shared_ptr<spdlog::logger> console = spdlog::stdout_color_mt("console");
+    Logger console;
 
     std::unique_ptr<IConsumer> consumer;
 
 public:
-    IConsumerApp(spdlog::level::level_enum log_level = spdlog::level::info);
-    virtual ~IConsumerApp() = default;
+    ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO) : console(log_level) {};
+    virtual ~ConsumerApp() = default;
 
     // Factory Method to Create Consumer
     virtual void create_consumer();
