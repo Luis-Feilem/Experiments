@@ -10,6 +10,7 @@ add_library(core STATIC)
 target_sources(core PRIVATE 
         logger/Logger.cpp
         factory/ConsumerFactory.cpp
+        factory/PublisherFactory.cpp
 )
 
 # Add public headers so they can be included by other targets

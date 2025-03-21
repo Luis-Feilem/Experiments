@@ -6,7 +6,7 @@
 
 class IConsumer {
 protected:
-    Logger console = Logger(Logger::LogLevel::INFO);
+    Logger console;
 
 public:
     inline IConsumer(Logger::LogLevel log_level = Logger::LogLevel::INFO) {

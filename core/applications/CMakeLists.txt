@@ -9,3 +9,6 @@ target_link_libraries(ConsumerApp PUBLIC core)
 
 # add_executable(Publisherapp PublisherApp.cpp)
 # target_link_libraries(PublisherApp PRIVATE core)
+
+add_executable(PublisherApp PublisherApp.cpp)
+target_link_libraries(PublisherApp PUBLIC core)

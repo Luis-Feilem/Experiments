@@ -2,15 +2,16 @@
 #define IPUBLISHER_HPP
 
 #include <string>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include "Logger.hpp"
 
 class IPublisher {
 protected:
-    std::shared_ptr<spdlog::logger> console = spdlog::stdout_color_mt("console");
+    Logger console;
     
 public:
-    IPublisher(spdlog::level::level_enum log_level = spdlog::level::info);
+    IPublisher(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
+        console.set_level(log_level);
+    }
     virtual ~IPublisher() = default;
 
     // Initializes the publisher (e.g., connects to a broker)
