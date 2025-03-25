@@ -2,14 +2,9 @@
 #include "cstdlib"
 
 
-// ConsumerApp::ConsumerApp(Logger::LogLevel log_level){
-//     console.set_level(log_level);
-//     console.log_debug("[ConsumerApp] Constructing ConsumerApp...");
-// }
-
 void ConsumerApp::create_consumer() {
-    console.log_debug("[ConsumerApp] Creating consumer");
     std::string technology = std::getenv("TECHNOLOGY");
+    console.log_debug("[ConsumerApp] Creating consumer for technology " + technology);
     
     consumer = ConsumerFactory::create(technology);
     console.log_debug("[ConsumerApp] Created " + technology + " consumer");

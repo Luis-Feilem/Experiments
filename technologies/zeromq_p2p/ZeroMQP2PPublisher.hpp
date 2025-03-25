@@ -4,11 +4,13 @@
 #include "../../core/interfaces/IPublisher.hpp"
 #include <zmq.hpp>
 #include <string>
+#include "Logger.hpp"
 
 class ZeroMQP2PPublisher : public IPublisher {
 private:
     zmq::context_t context;
     zmq::socket_t publisher;
+    Logger console;
 
 public:
     ZeroMQP2PPublisher();

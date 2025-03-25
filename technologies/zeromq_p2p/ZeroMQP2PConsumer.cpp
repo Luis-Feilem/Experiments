@@ -3,7 +3,7 @@
 #include <thread>
 #include <cstdlib>
 #include <sstream>
-#include "../../core/factory/ConsumerFactory.hpp"
+#include "ConsumerFactory.hpp"
 
 namespace {
     struct Register {
@@ -18,8 +18,7 @@ namespace {
 }
 
 ZeroMQP2PConsumer::ZeroMQP2PConsumer()
-    : context(1), subscriber(context, ZMQ_SUB) {
-    std::cerr << "Constructing Consumer..." << std::endl << std::flush;
+    : IConsumer(Logger::LogLevel::INFO), context(1), subscriber(context, ZMQ_SUB) {
 }
 
 ZeroMQP2PConsumer::~ZeroMQP2PConsumer() {
@@ -35,7 +34,7 @@ void ZeroMQP2PConsumer::initialize() {
     }
     std::string endpoint = "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555";
 
-    std::cout << "[ZeroMQP2P Consumer] Connecting to " << endpoint << std::endl;
+    console.log_debug("[ZeroMQP2P Consumer] Connecting to " + endpoint);
     try {
         subscriber.connect(endpoint);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -46,14 +45,14 @@ void ZeroMQP2PConsumer::initialize() {
         while (std::getline(ss, topic, ',')) {
             subscribe(topic);
         }
-        std::cout << "[ZeroMQP2P Consumer] Connected and subscribed." << std::endl;
+        console.log_debug("[ZeroMQP2P Consumer] Connected and subscribed.");
     } catch (const zmq::error_t &e) {
-        std::cerr << "[ZeroMQP2P Consumer] Initialization failed: " << e.what() << std::endl;
+        console.log_error("[ZeroMQP2P Consumer] Initialization failed: " + std::string(e.what()));
     }
 }
 
 void ZeroMQP2PConsumer::subscribe(const std::string &topic) {
-    std::cout << "[ZeroMQP2P Consumer] Subscribing to topic: " << topic << std::endl;
+    console.log_debug("[ZeroMQP2P Consumer] Subscribing to topic: " + topic);
     subscriber.set(zmq::sockopt::subscribe, topic);
     // Set a timeout for receiving messages (10s)
     subscriber.set(zmq::sockopt::rcvtimeo, 10000);
@@ -64,7 +63,7 @@ std::string ZeroMQP2PConsumer::receive_message() {
     try {
         auto result = subscriber.recv(zmq_message, zmq::recv_flags::none);
         if (!result) {
-            std::cerr << "[ZeroMQP2P Consumer] Failed to receive message!" << std::endl;
+            console.log_error("[ZeroMQP2P Consumer] Failed to receive message!");
             return "";
         }
 
@@ -73,17 +72,17 @@ std::string ZeroMQP2PConsumer::receive_message() {
         std::string topic = message.substr(0, space_pos);
         std::string payload = message.substr(space_pos + 1);
 
-        std::cout << "[ZeroMQP2P Consumer] Received on topic: " << topic << " -> " << payload << std::endl;
+        console.log_info("[ZeroMQP2P Consumer] Received on topic: " + topic + " -> " + payload);;
 
         // Handle poison pill termination
         if (payload == "__END__") {
-            std::cout << "[ConsumerApp] Received termination signal. Stopping." << std::endl;
+            console.log_info("[ConsumerApp] Received termination signal. Stopping.");
             exit(0);
         }
 
         return payload;
     } catch (const zmq::error_t &e) {
-        std::cerr << "[ZeroMQP2P Consumer] Receive failed: " << e.what() << std::endl;
+        console.log_error("[ZeroMQP2P Consumer] Receive failed: " + std::string(e.what()));
         return "";
     }
 }

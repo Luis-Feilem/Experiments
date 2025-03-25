@@ -1,3 +1,4 @@
+# Expected name of the image: core_image
 # Base image with system-level dependencies
 FROM ubuntu:22.04
 
@@ -12,6 +13,10 @@ WORKDIR /app
 # Copy shared core files and CMakeLists.txt
 COPY ./core /app/core
 COPY ./CMakeLists.txt /app/CMakeLists.txt
+
+RUN mkdir build && cd build && \
+    cmake .. && \
+    cmake --build .
 
 # No cmake/build step here!
 ENTRYPOINT ["/bin/bash"]

@@ -88,12 +88,13 @@ class ContainerManager:
         
     @return_container_ids
     @validate_publisher_config
-    def start_publisher(self, config, tech_name, paused = True):
+    def start_publisher(self, config, tech_name, paused = True, mode = None):
         print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
         publisher_endpoint = f"{tech_name}-{config['endpoint']}"
         container_name = f"{tech_name}-{config['id']}"
         publisher_endpoint = "0.0.0.0" if publisher_endpoint == container_name else publisher_endpoint
         environment={
+            "TECHNOLOGY": tech_name,
             "CONTAINER_ID": config['id'],
             "PUBLISHER_ENDPOINT": publisher_endpoint,
             "TOPICS": ','.join(config['topics']),
@@ -101,14 +102,17 @@ class ContainerManager:
             "UPDATE_EVERY": config['update_every']
         }
         print(f"Environment: {environment}")
+        print(f"Starting container from image {tech_name}_publisher in mode {mode}")
         container = self.client.containers.run(
             name=container_name,
-            image=f"{tech_name}-publisher",
+            image=f"{tech_name}_publisher",
             environment=environment,
             network=self.network_name,
-            detach=True
+            detach=True,
+            command=[mode]
         )
         self.containers.append(container)
+        print(f"Created container {container.name}")
         if paused:
             container.pause()
         return container.name
@@ -125,20 +129,22 @@ class ContainerManager:
     
     @return_container_ids
     @validate_consumer_config
-    def start_consumer(self, config, tech_name, paused = True):
+    def start_consumer(self, config, tech_name, paused = True, mode = None):
         print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
         try:
             environment = {
+                "TECHNOLOGY": tech_name,
                 "CONTAINER_ID": config['id'],
                 "CONSUMER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
                 "TOPICS": ','.join(config['topics'])
             }
             container = self.client.containers.run(
                 name=f"{tech_name}_{config['id']}",
-                image=f"{tech_name}-consumer",
+                image=f"{tech_name}_consumer",
                 environment=environment,
                 network=self.network_name,
-                detach=True
+                detach=True,
+                command=[mode]
             )
             self.containers.append(container)
             if paused:

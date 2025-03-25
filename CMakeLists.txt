@@ -19,6 +19,13 @@ endif()
 # Add subdirectories
 add_subdirectory(core)
 add_subdirectory(core/applications)
-# add_subdirectory(technologies/zeromq_p2p)
+
+# add as technologies are added (this is UGLY but whatever)
+if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/zeromq_p2p")
+    message(STATUS "Including ZeroMQ P2P technology")
+    add_subdirectory(technologies/zeromq_p2p)
+else()
+    message(STATUS "Skipping ZeroMQ P2P technology (not found)")
+endif()
 
 # target_link_libraries(MessagingBenchmark PRIVATE core)

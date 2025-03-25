@@ -27,10 +27,11 @@ void PublisherApp::load_from_env() {
 
 // Factory Method to Create Publisher
 void PublisherApp::create_publisher() {
-    console.log_debug("[PublisherApp] Creating publisher");
     std::string technology = std::getenv("TECHNOLOGY");
+    console.log_debug("[PublisherApp] Creating publisher for technology " + technology);
     
     publisher = PublisherFactory::create(technology);
+    load_from_env();
     console.log_debug("[PublisherApp] Created " + technology + " publisher");
 }
 

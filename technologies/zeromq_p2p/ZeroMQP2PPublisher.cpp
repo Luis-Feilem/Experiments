@@ -3,10 +3,22 @@
 #include <thread>
 #include <cstdlib>
 #include <sstream>
+#include "PublisherFactory.hpp"
+
+namespace {
+    struct Register {
+        Register() {
+            PublisherFactory::registerPublisher("zeromq_p2p", []() -> std::unique_ptr<IPublisher> {
+                return std::make_unique<ZeroMQP2PPublisher>();
+            });
+        }
+    };
+
+    static Register reg;
+}
 
 ZeroMQP2PPublisher::ZeroMQP2PPublisher()
     : context(1), publisher(context, ZMQ_PUB) {
-    std::cerr << "Constructing Publisher..." << std::endl << std::flush;
 }
 
 ZeroMQP2PPublisher::~ZeroMQP2PPublisher() {
@@ -21,13 +33,13 @@ void ZeroMQP2PPublisher::initialize() {
     }
 
     std::string endpoint = "tcp://" + std::string(std::getenv("PUBLISHER_ENDPOINT")) + ":5555";
-    std::cout << "[ZeroMQP2PPublisher] Binding to " << endpoint << std::endl;
+    console.log_debug("[ZeroMQP2PPublisher] Binding to " + endpoint);
     try {
         publisher.bind(endpoint);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::cout << "[ZeroMQP2PPublisher] Bound to " << endpoint << std::endl;
+        console.log_debug("[ZeroMQP2PPublisher] Bound to " + endpoint);
     } catch (const zmq::error_t &e) {
-        std::cerr << "[ZeroMQP2PPublisher] Initialization failed: " << e.what() << std::endl;
+        console.log_error("[ZeroMQP2PPublisher] Initialization failed: " + std::string(e.what()));
     }
 }
 
@@ -44,10 +56,10 @@ void ZeroMQP2PPublisher::send_message(const std::string &message) {
             std::string full_message = topic + " " + message;
             zmq::message_t zmq_message(full_message.begin(), full_message.end());
             publisher.send(zmq_message, zmq::send_flags::none);
-            std::cout << "[ZeroMQP2PPublisher] Sent to topic: " << topic << std::endl;
-            std::cout << "[Publisher] Socket connected clients: " << publisher.getsockopt<int>(ZMQ_EVENTS) << std::endl;
+            console.log_info("[ZeroMQP2PPublisher] Sent to topic: " + topic);
+            console.log_debug("[Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
         } catch (const zmq::error_t &e) {
-            std::cerr << "[ZeroMQP2PPublisher] Send failed: " << e.what() << std::endl;
+            console.log_error("[ZeroMQP2PPublisher] Send failed: " + std::string(e.what()));
         }
     }
 }

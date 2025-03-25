@@ -17,17 +17,17 @@ class BenchmarkManager:
         with open(config_path, 'r', encoding='utf-8') as file:
             self.config = json.load(file)
 
-    def run(self):
+    def run(self, mode = None):
         scenarios = self.config['scenarios']
         technologies = self.config['technologies']
 
         for tech_name in technologies:
-            print(f"Running experiments for technology {tech_name}...")
+            print(f"Running experiments for technology {tech_name} in mode {mode}...")
             for scenario_name in scenarios:
-                print(f"Running experiment for scenario {scenario_name}...")
-                self.execute_experiment(tech_name, scenario_name)
+                print(f"Running experiment for scenario {scenario_name} in mode {mode}...")
+                self.execute_experiment(tech_name, scenario_name, mode)
 
-    def execute_experiment(self, tech_name, scenario_name):
+    def execute_experiment(self, tech_name, scenario_name, mode = None):
         technology_dir = os.path.join(TECHNOLOGIES_DIR, tech_name)
         tech_manager = TechnologyManager(technology_dir)
         print(f"Validating technology {tech_name}...")
@@ -45,14 +45,14 @@ class BenchmarkManager:
 
         try:
             print(f"Using technology {tech_name} to run scenario {scenario_name} ...")
-            print("Starting and pausing all containers...")
+            print(f"Starting and pausing all containers in mode {mode}...")
             for pub_config in scenario_manager.get_publishers():
-                container_id = container_manager.start_publisher(pub_config, tech_name)[0]
+                container_id = container_manager.start_publisher(pub_config, tech_name, mode = mode)[0]
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Publisher {pub_config['id']} failed to start correctly.")
 
             for sub_config in scenario_manager.get_consumers():
-                container_id = container_manager.start_consumer(sub_config, tech_name)[0]
+                container_id = container_manager.start_consumer(sub_config, tech_name, mode = mode)[0]
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
             
