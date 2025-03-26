@@ -21,7 +21,7 @@ public:
     ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO) : console(log_level) {};
     virtual ~ConsumerApp() = default;
 
-    // Factory Method to Create Consumer
+    // Factory call to Create Consumer
     virtual void create_consumer();
 
     // Initializes and runs the consumer logic

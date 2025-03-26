@@ -32,7 +32,7 @@ public:
     // Loads values from environment variables into the attributes
     virtual void load_from_env();
 
-    // Factory Method to Create Publisher
+    // Factory call to Create Publisher
     virtual void create_publisher();
 
     // Runs the publisher logic (can now be fully generalized)
