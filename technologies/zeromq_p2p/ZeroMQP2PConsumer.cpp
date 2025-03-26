@@ -28,11 +28,25 @@ ZeroMQP2PConsumer::~ZeroMQP2PConsumer() {
 
 void ZeroMQP2PConsumer::initialize() {
     const char* vendpoint = std::getenv("CONSUMER_ENDPOINT");
-    const char* topics = std::getenv("TOPICS");
-    if (!vendpoint || !topics) {
-        throw std::runtime_error("CONSUMER_ENDPOINT or TOPICS environment variable not set.");
+    const char* vtopics = std::getenv("TOPICS");
+    std::string endpoint = "";
+    std::string topics = "";
+    std::string consumer_id = std::getenv("CONTAINER_ID");
+    if (!vendpoint) {
+        // throw std::runtime_error("PUBLISHER_ENDPOINT environment variable not set.");
+        endpoint = "tcp://zeromq_p2p_P" + consumer_id.substr(1) + ":5555";
+        console.log_debug("[ZeroMQP2P Consumer] CONSUMER_ENDPOINT not set, default to publisher with same numerical id: " + endpoint);
     }
-    std::string endpoint = "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555";
+    else{
+        endpoint = "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555";
+    }
+    if (!vtopics) {
+        topics = consumer_id.substr(1);
+        throw std::runtime_error("TOPICS environment variable not set, default to same id as the consumer: ");
+    }
+    else {
+        topics = vtopics;
+    }
 
     console.log_debug("[ZeroMQP2P Consumer] Connecting to " + endpoint);
     try {
@@ -76,7 +90,7 @@ std::string ZeroMQP2PConsumer::receive_message() {
 
         // Handle poison pill termination
         if (payload == "__END__") {
-            console.log_info("[ConsumerApp] Received termination signal. Stopping.");
+            console.log_info("[ZeroMQP2P Consumer] Received termination signal. Stopping.");
             exit(0);
         }
 

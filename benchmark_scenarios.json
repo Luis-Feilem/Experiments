@@ -1,8 +1,5 @@
 {
-    "scenarios": [
-      "1pub1sub1topics10msg5000ms",
-      "2pub2sub2topics10msg5000ms"
-    ],
+    "scenario_batch": "quick_test.json",
     "technologies": [
       "zeromq_p2p"
     ]

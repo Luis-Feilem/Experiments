@@ -1,8 +1,0 @@
-# Inherit from ZeroMQ image
-FROM zeromq_p2p-image:latest
-
-# Set environment variables for consumer config
-ENV TECHNOLOGY="zeromq_p2p"
-
-# Run the consumer app
-ENTRYPOINT ["/app/build/ZeroMQConsumerAppP2P"]

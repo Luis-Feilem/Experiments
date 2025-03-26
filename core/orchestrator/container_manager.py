@@ -75,82 +75,67 @@ class ContainerManager:
                 raise ValueError(f"Container ID '{container_id}' not found")
             return method(self, container, *args, **kwargs)
         return wrapper
-
-    @staticmethod
-    def validate_publisher_config(method):
-        @wraps(method)
-        def wrapper(self, config, *args, **kwargs):
-            for i in ['id', 'endpoint', 'topics', 'messages', 'update_every']:
-                if i not in config:
-                    raise ValueError(f"Invalid publisher config: missing '{i}'")
-            return method(self, config, *args, **kwargs)
-        return wrapper
         
-    @return_container_ids
-    @validate_publisher_config
-    def start_publisher(self, config, tech_name, paused = True, mode = None):
-        print(f"Starting publisher {config['id']} on topics {config['topics']} using {tech_name}")
-        publisher_endpoint = f"{tech_name}-{config['endpoint']}"
-        container_name = f"{tech_name}-{config['id']}"
-        publisher_endpoint = "0.0.0.0" if publisher_endpoint == container_name else publisher_endpoint
-        environment={
-            "TECHNOLOGY": tech_name,
-            "CONTAINER_ID": config['id'],
-            "PUBLISHER_ENDPOINT": publisher_endpoint,
-            "TOPICS": ','.join(config['topics']),
-            "MESSAGES": config['messages'],
-            "UPDATE_EVERY": config['update_every']
-        }
-        print(f"Environment: {environment}")
-        print(f"Starting container from image {tech_name}_publisher in mode {mode}")
-        container = self.client.containers.run(
-            name=container_name,
-            image=f"{tech_name}_publisher",
-            environment=environment,
-            network=self.network_name,
-            detach=True,
-            command=[mode]
-        )
-        self.containers.append(container)
-        print(f"Created container {container.name}")
-        if paused:
-            container.pause()
+    # @return_container_ids
+    def start_publisher(self, tech_name, pub_id, topics, pub_rate, n_messages=None, duration=None, paused = True, mode = None):
+        if (n_messages is None and duration is None) or (n_messages is not None and duration is not None):
+            raise ValueError("One and only one of 'n_messages' and 'duration' must be passed.")
+        print(f"Starting publisher {pub_id} on topics {topics} using {tech_name}")
+        try:
+            container_name = f"{tech_name}-{pub_id}"
+            # publisher_endpoint = "0.0.0.0" if publisher_endpoint == container_name else publisher_endpoint
+            environment={
+                "TECHNOLOGY": tech_name,
+                "CONTAINER_ID": pub_id,
+                # "PUBLISHER_ENDPOINT": publisher_endpoint,
+                "TOPICS": ','.join(topics),
+                "MESSAGES": n_messages,
+                "DURATION": duration,
+                "UPDATE_EVERY": pub_rate
+            }
+            print(f"Environment: {environment}")
+            print(f"Starting container from image {tech_name}_publisher in mode {mode}")
+            container = self.client.containers.run(
+                name=container_name,
+                image=f"{tech_name}_publisher",
+                environment=environment,
+                network=self.network_name,
+                detach=True,
+                command=[mode]
+            )
+            if paused:
+                container.pause()
+            self.containers.append(container)
+            print(f"Created container {container.name}")
+        except docker.errors.DockerException as e:
+            raise ValueError(f"Failed to start publisher {pub_id}") from e
         return container.name
-
-    @staticmethod
-    def validate_consumer_config(method):
-        @wraps(method)
-        def wrapper(self, config, *args, **kwargs):
-            for i in ['id', 'endpoint', 'topics']:
-                if i not in config:
-                    raise ValueError(f"Invalid consumer config: missing '{i}'")
-            return method(self, config, *args, **kwargs)
-        return wrapper
     
-    @return_container_ids
-    @validate_consumer_config
-    def start_consumer(self, config, tech_name, paused = True, mode = None):
-        print(f"Starting consumer {config['id']} subscribed to topics {config['topics']} using {tech_name}")
+    # @return_container_ids
+    def start_consumer(self, tech_name, con_id, topics, backlog_size = None, paused = True, mode = None):
+        print(f"Starting consumer {con_id} subscribed to topics {topics} with backlog_size {backlog_size} using {tech_name}")
         try:
             environment = {
                 "TECHNOLOGY": tech_name,
-                "CONTAINER_ID": config['id'],
-                "CONSUMER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
-                "TOPICS": ','.join(config['topics'])
+                "CONTAINER_ID": con_id,
+                # "CONSUMER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
+                "TOPICS": ','.join(topics),
+                "BACKLOG_SIZE": backlog_size
             }
             container = self.client.containers.run(
-                name=f"{tech_name}_{config['id']}",
+                name=f"{tech_name}_{con_id}",
                 image=f"{tech_name}_consumer",
                 environment=environment,
                 network=self.network_name,
                 detach=True,
                 command=[mode]
             )
-            self.containers.append(container)
             if paused:
                 container.pause()
+            self.containers.append(container)
+            print(f"Created container {container.name}")
         except docker.errors.DockerException as e:
-            raise ValueError(f"Failed to start consumer {config['id']}") from e
+            raise ValueError(f"Failed to start consumer {con_id}") from e
         return container.name
 
     def wake_all(self):

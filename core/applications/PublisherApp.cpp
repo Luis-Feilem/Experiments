@@ -40,7 +40,7 @@ void PublisherApp::run() {
     console.log_debug("[PublisherApp] Running publisher");
     std::string endpoint = std::getenv("PUBLISHER_ENDPOINT") ?
                             "tcp://" + std::string(std::getenv("PUBLISHER_ENDPOINT")) + ":5555" :
-                            "tcp://127.0.0.1:5555";
+                            "tcp://0.0.0.0:5555";
 
     console.log_debug("[PublisherApp] Initializing publisher with endpoint: " + endpoint);
     publisher->initialize();
@@ -72,7 +72,7 @@ void PublisherApp::run() {
 int main(int argc, char * argv[]) {
     std::ios::sync_with_stdio(false); // Disable stream buffering
     std::cout << "[PublisherApp] Start" << std::endl << std::flush;
-    try {
+    // try {
         Logger::LogLevel log_level;
         if (argc >= 2 && argv[1] != nullptr){
             log_level = Logger::string_to_level(argv[1]);
@@ -80,10 +80,10 @@ int main(int argc, char * argv[]) {
         PublisherApp app = PublisherApp(log_level);
         app.create_publisher();
         app.run();
-    } catch (const std::exception &e) {
-        std::cerr << "[PublisherApp] Exception caught: " << e.what() << std::endl;
-    } catch (...) {
-        std::cerr << "[PublisherApp] Unknown exception caught!" << std::endl;
-    }
+    // } catch (const std::exception &e) {
+    //     std::cerr << "[PublisherApp] Exception caught: " << e.what() << std::endl;
+    // } catch (...) {
+    //     std::cerr << "[PublisherApp] Unknown exception caught!" << std::endl;
+    // }
     return 0;
 }

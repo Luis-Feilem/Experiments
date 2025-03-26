@@ -1,6 +1,6 @@
 {
-    "producerAssignmentStrategy": ["round-robin", "direct", "random"],
-    "consumerAssignmentStrategy": ["shared", "direct", "partition-based"],
+    "producerAssignmentStrategy": ["round-robin", "random"],
+    "consumerAssignmentStrategy": ["round-robin", "shared"],
     "common":{
         "numProducers": {
             "lower": 1,
@@ -23,7 +23,7 @@
             "step2": 10,
             "step_operator2": "+"
         },
-        "parallelChannelsPerTopic":{
+        "parallelSubscriptionsPerTopic":{
             "lower": 1,
             "upper": 16,
             "step": 1,
@@ -35,7 +35,7 @@
             "step": 2,
             "step_operator": "*"
         },
-        "producerRatePerSecond":{
+        "producerRatePerMicroSecond":{
             "lower": 1,
             "upper": 100000,
             "step": 2,

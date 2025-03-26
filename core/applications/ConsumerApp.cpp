@@ -15,7 +15,7 @@ void ConsumerApp::run() {
     console.log_debug("[ConsumerApp] Starting consumer");
     std::string endpoint = std::getenv("CONSUMER_ENDPOINT") ?
                             "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555" :
-                            "tcp://127.0.0.1:5555";
+                            "tcp://" + std::string(std::getenv("TECHNOLOGY")) + "_broker:5555";
 
     console.log_debug("[ConsumerApp] Initializing consumer with endpoint: " + endpoint 
                 + " and topics: " + topics);
