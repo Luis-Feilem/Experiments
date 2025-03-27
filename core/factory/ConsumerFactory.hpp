@@ -5,11 +5,11 @@
 
 class ConsumerFactory {
 public:
-    using CreateFunc = std::unique_ptr<IConsumer>(*)();
+    using CreateFunc = std::unique_ptr<IConsumer>(*)(Logger console);
 
     static void registerConsumer(const std::string& name, CreateFunc func);
 
-    static std::unique_ptr<IConsumer> create(const std::string& name);
+    static std::unique_ptr<IConsumer> create(const std::string& name, Logger console);
 
 private:
     static std::unordered_map<std::string, CreateFunc>& getRegistry(){

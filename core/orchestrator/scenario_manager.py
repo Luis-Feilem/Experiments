@@ -20,7 +20,7 @@ class ScenarioManager:
         self.num_topics = ScenarioConfigManager.get_numTopics(self.scenario)
         self.parallel_channels_per_topic = ScenarioConfigManager.get_parallelSubscriptionsPerTopic(self.scenario)
         self.message_size = ScenarioConfigManager.get_messageSizeBytes(self.scenario)
-        self.producer_rate = ScenarioConfigManager.get_producerRatePerMicroSecond(self.scenario)
+        self.producer_rate = ScenarioConfigManager.get_producerWaitInMicroSeconds(self.scenario)
         self.backlog_size = ScenarioConfigManager.get_backlogSizeMessages(self.scenario)
         self.bandwidth = ScenarioConfigManager.get_bandwidthMbps(self.scenario)
         self.latency = ScenarioConfigManager.get_latencyMs(self.scenario)
@@ -88,8 +88,8 @@ class ScenarioManager:
                 "topics": topics,
                 "backlog_size": self.backlog_size
             }
-            print(f"[SM]: config for consumer {f'P{con_id}'}: {con_configs[con_id]}")
-        print(f"[SM]: pub_configs: {con_configs}")
+            print(f"[SM]: config for consumer {f'C{con_id}'}: {con_configs[con_id]}")
+        print(f"[SM]: con_configs: {con_configs}")
         return con_configs
 
     # def get_publishers(self):

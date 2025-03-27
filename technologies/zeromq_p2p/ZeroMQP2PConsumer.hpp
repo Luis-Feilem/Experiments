@@ -12,7 +12,7 @@ private:
     zmq::socket_t subscriber;
 
 public:
-    ZeroMQP2PConsumer();
+    ZeroMQP2PConsumer(const Logger& logger);
     ~ZeroMQP2PConsumer();
 
     void initialize() override;

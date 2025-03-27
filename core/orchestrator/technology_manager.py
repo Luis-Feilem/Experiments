@@ -32,10 +32,10 @@ class TechnologyManager:
         return True
     
     def base_dockerfile(self):
-        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name)
+        return os.path.join(self.tech_path, "Dockerfile.base")
     
     def publisher_dockerfile(self):
-        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name + "Publisher")
+        return os.path.join(self.tech_path, "Dockerfile.publisher")
     
     def consumer_dockerfile(self):
-        return os.path.join(self.tech_path, "Dockerfile." + self.tech_name + "Consumer")
+        return os.path.join(self.tech_path, "Dockerfile.consumer")

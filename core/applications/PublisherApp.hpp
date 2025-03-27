@@ -6,6 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "Logger.hpp"
 #include "PublisherFactory.hpp"
@@ -16,15 +17,18 @@ protected:
     std::string id;
     std::string topics;
     int message_count;
+    int duration;
     int update_every;
 
     Logger console;
+    Logger::LogLevel log_level;
 
     std::unique_ptr<IPublisher> publisher;
 
 public:
     PublisherApp(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
-        console.set_level(log_level);
+        log_level = log_level;
+        console = Logger(log_level);
     }
     virtual ~PublisherApp() = default;
 

@@ -76,4 +76,4 @@ class BenchmarkManager:
         finally:
             print("Cleaning up...")
             self.cm.stop_all()
-            # self.cm.remove_all()
+            self.cm.remove_all()

@@ -5,10 +5,10 @@ void PublisherFactory::registerPublisher(const std::string& name, CreateFunc fun
     getRegistry()[name] = func;
 }
 
-std::unique_ptr<IPublisher> PublisherFactory::create(const std::string& name) {
+std::unique_ptr<IPublisher> PublisherFactory::create(const std::string& name, Logger console) {
     auto it = getRegistry().find(name);
     if (it != getRegistry().end()) {
-        return it->second();
+        return it->second(console);
     }
     throw std::runtime_error("Publisher type not registered");
 }

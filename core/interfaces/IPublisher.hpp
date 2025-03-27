@@ -9,8 +9,8 @@ protected:
     Logger console;
     
 public:
-    IPublisher(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
-        console.set_level(log_level);
+    IPublisher(const Logger& logger) {
+        console = logger;
     }
     virtual ~IPublisher() = default;
 

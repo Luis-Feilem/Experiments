@@ -9,8 +9,8 @@ protected:
     Logger console;
 
 public:
-    inline IConsumer(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
-        console.set_level(log_level);
+    inline IConsumer(const Logger& logger) {
+        console = logger;
     }
     virtual ~IConsumer() = default;
 

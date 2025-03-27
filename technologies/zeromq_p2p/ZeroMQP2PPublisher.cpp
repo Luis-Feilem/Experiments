@@ -8,8 +8,8 @@
 namespace {
     struct Register {
         Register() {
-            PublisherFactory::registerPublisher("zeromq_p2p", []() -> std::unique_ptr<IPublisher> {
-                return std::make_unique<ZeroMQP2PPublisher>();
+            PublisherFactory::registerPublisher("zeromq_p2p", [](Logger console) -> std::unique_ptr<IPublisher> {
+                return std::make_unique<ZeroMQP2PPublisher>(console);
             });
         }
     };
@@ -17,8 +17,11 @@ namespace {
     static Register reg;
 }
 
-ZeroMQP2PPublisher::ZeroMQP2PPublisher()
-    : context(1), publisher(context, ZMQ_PUB) {
+ZeroMQP2PPublisher::ZeroMQP2PPublisher(const Logger& logger)
+    try : IPublisher(logger), context(1), publisher(context, ZMQ_PUB) {
+        console.log_debug("[ZeroMQP2P Publisher] Constructor finished");
+    } catch (const zmq::error_t& e) {
+        console.log_error("[ZeroMQP2P Publisher] Constructor failed: " + std::string(e.what()));
 }
 
 ZeroMQP2PPublisher::~ZeroMQP2PPublisher() {
@@ -33,7 +36,7 @@ void ZeroMQP2PPublisher::initialize() {
     if (!vendpoint) {
         console.log_debug("[ZeroMQP2P Publisher] PUBLISHER_ENDPOINT not set, default to 0.0.0.0");
         // throw std::runtime_error("PUBLISHER_ENDPOINT environment variable not set.");
-        endpoint = "0.0.0.0:5555";  
+        endpoint = "tcp://0.0.0.0:5555";  
     }
     else{
         endpoint = "tcp://" + std::string(std::getenv("PUBLISHER_ENDPOINT")) + ":5555";

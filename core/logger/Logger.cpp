@@ -41,23 +41,28 @@ Logger::LogLevel Logger::string_to_level(const std::string& level) {
 }
 
 
+// Get log level
+Logger::LogLevel Logger::get_level(){
+    return log_level;
+}
+
 // Log debug messages
 void Logger::log_debug(const std::string& message) {
     if (log_level <= Logger::LogLevel::DEBUG) {
-        std::cout << "[" << level_to_string(Logger::LogLevel::DEBUG) << "] " << message << std::endl;
+        std::cout << "[" << level_to_string(Logger::LogLevel::DEBUG) << "] " << message << std::endl << std::flush;
     }
 }
 
 // Log info messages
 void Logger::log_info(const std::string& message) {
     if (log_level <= Logger::LogLevel::INFO) {
-        std::cout << "[" << level_to_string(Logger::LogLevel::INFO) << "] " << message << std::endl;
+        std::cout << "[" << level_to_string(Logger::LogLevel::INFO) << "] " << message << std::endl << std::flush;
     }
 }
 
 // Log error messages
 void Logger::log_error(const std::string& message) {
     if (log_level <= Logger::LogLevel::ERROR) {
-        std::cout << "[" << level_to_string(Logger::LogLevel::ERROR) << "] " << message << std::endl;
+        std::cout << "[" << level_to_string(Logger::LogLevel::ERROR) << "] " << message << std::endl << std::flush;
     }
 }

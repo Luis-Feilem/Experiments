@@ -123,7 +123,7 @@ class ContainerManager:
                 "BACKLOG_SIZE": backlog_size
             }
             container = self.client.containers.run(
-                name=f"{tech_name}_{con_id}",
+                name=f"{tech_name}-{con_id}",
                 image=f"{tech_name}_consumer",
                 environment=environment,
                 network=self.network_name,

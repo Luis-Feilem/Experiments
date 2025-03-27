@@ -8,8 +8,8 @@
 namespace {
     struct Register {
         Register() {
-            ConsumerFactory::registerConsumer("zeromq_p2p", []() -> std::unique_ptr<IConsumer> {
-                return std::make_unique<ZeroMQP2PConsumer>();
+            ConsumerFactory::registerConsumer("zeromq_p2p", [](Logger console) -> std::unique_ptr<IConsumer> {
+                return std::make_unique<ZeroMQP2PConsumer>(console);
             });
         }
     };
@@ -17,8 +17,11 @@ namespace {
     static Register reg;
 }
 
-ZeroMQP2PConsumer::ZeroMQP2PConsumer()
-    : IConsumer(Logger::LogLevel::INFO), context(1), subscriber(context, ZMQ_SUB) {
+ZeroMQP2PConsumer::ZeroMQP2PConsumer(const Logger& logger)
+    try : IConsumer(logger), context(1), subscriber(context, ZMQ_SUB) {
+        console.log_debug("[ZeroMQP2P Consumer] Constructor finished");
+    } catch (const zmq::error_t& e) {
+        std::cerr << "[ZeroMQP2P Consumer] Constructor failed: " << e.what() << std::endl;
 }
 
 ZeroMQP2PConsumer::~ZeroMQP2PConsumer() {
@@ -27,14 +30,14 @@ ZeroMQP2PConsumer::~ZeroMQP2PConsumer() {
 }
 
 void ZeroMQP2PConsumer::initialize() {
+    console.log_debug("[ZeroMQP2P Consumer] initializing...");
     const char* vendpoint = std::getenv("CONSUMER_ENDPOINT");
     const char* vtopics = std::getenv("TOPICS");
     std::string endpoint = "";
     std::string topics = "";
     std::string consumer_id = std::getenv("CONTAINER_ID");
     if (!vendpoint) {
-        // throw std::runtime_error("PUBLISHER_ENDPOINT environment variable not set.");
-        endpoint = "tcp://zeromq_p2p_P" + consumer_id.substr(1) + ":5555";
+        endpoint = "tcp://zeromq_p2p-P" + consumer_id.substr(1) + ":5555";
         console.log_debug("[ZeroMQP2P Consumer] CONSUMER_ENDPOINT not set, default to publisher with same numerical id: " + endpoint);
     }
     else{

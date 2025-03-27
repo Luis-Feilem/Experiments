@@ -5,11 +5,11 @@
 
 class PublisherFactory {
 public:
-    using CreateFunc = std::unique_ptr<IPublisher>(*)();
+    using CreateFunc = std::unique_ptr<IPublisher>(*)(Logger console);
 
     static void registerPublisher(const std::string& name, CreateFunc func);
 
-    static std::unique_ptr<IPublisher> create(const std::string& name);
+    static std::unique_ptr<IPublisher> create(const std::string& name, Logger console);
 
 private:
     static std::unordered_map<std::string, CreateFunc>& getRegistry(){

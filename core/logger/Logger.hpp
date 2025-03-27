@@ -20,6 +20,9 @@ public:
     // Set the log level
     void set_level(Logger::LogLevel level);
 
+    // Get the log level
+    Logger::LogLevel get_level();
+
     // Log functions
     void log_debug(const std::string& message);
     void log_info(const std::string& message);

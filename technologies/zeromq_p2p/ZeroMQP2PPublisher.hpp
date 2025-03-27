@@ -10,10 +10,9 @@ class ZeroMQP2PPublisher : public IPublisher {
 private:
     zmq::context_t context;
     zmq::socket_t publisher;
-    Logger console;
 
 public:
-    ZeroMQP2PPublisher();
+    ZeroMQP2PPublisher(const Logger& logger);
     ~ZeroMQP2PPublisher();
 
     void initialize() override;

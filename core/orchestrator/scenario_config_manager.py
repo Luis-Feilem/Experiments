@@ -17,7 +17,7 @@ class ScenarioConfigManager:
             "numTopics", 
             "parallelSubscriptionsPerTopic",
             "messageSizeBytes",
-            "producerRatePerMicroSecond",
+            "producerWaitInMicroSeconds",
             "backlogSizeMessages"
         ]
         self.network_parts = [
@@ -69,9 +69,9 @@ class ScenarioConfigManager:
         t = str(scenario.get("numTopics", "T")).replace('.','_')
         pc = str(scenario.get("parallelSubscriptionsPerTopic", "PC")).replace('.','_')
         b = str(scenario.get("messageSizeBytes", "B")).replace('.','_')
-        r = str(scenario.get("producerRatePerMicroSecond", "R")).replace('.','_')
+        w = str(scenario.get("producerWaitInMicroSeconds", "W")).replace('.','_')
         bm = str(scenario.get("backlogSizeMessages", "BM")).replace('.','_')
-        name_parts.append(f"{p}p{c}c{t}t{pc}pc{b}b{r}mpus{bm}bm")
+        name_parts.append(f"{p}p{c}c{t}t{pc}pc{b}b{w}us{bm}bm")
 
         # Exclusive mode
         if EXCLUSIVE_TIME in scenario:
@@ -117,8 +117,8 @@ class ScenarioConfigManager:
         return scenario['messageSizeBytes']
 
     @staticmethod
-    def get_producerRatePerMicroSecond(scenario):
-        return scenario['producerRatePerMicroSecond']
+    def get_producerWaitInMicroSeconds(scenario):
+        return scenario['producerWaitInMicroSeconds']
 
     @staticmethod
     def get_backlogSizeMessages(scenario):
