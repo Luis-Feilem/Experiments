@@ -2,42 +2,6 @@ import docker
 from functools import wraps
 
 class ContainerManager:
-    """
-    Manages Docker containers for publishers and consumers.
-    Methods
-    -------
-    __init__():
-        Initializes the ContainerManager with a Docker client and an empty container list.
-    return_container_ids(method):
-        Decorator that adds container IDs to the return value of the decorated method.
-    validate_container(method):
-        Decorator that validates the existence of a container by its ID before executing the decorated method.
-    validate_publisher_config(config):
-        Validates the configuration for a publisher.
-    start_publisher(config, tech_name, paused=True):
-        Starts a publisher container with the given configuration and technology name. Optionally pauses the container.
-    validate_consumer_config(config):
-        Validates the configuration for a consumer.
-    start_consumer(config, tech_name, paused=True):
-        Starts a consumer container with the given configuration and technology name. Optionally pauses the container.
-    wake_all():
-        Unpauses all containers.
-    wake_container(container_id):
-        Unpauses a specific container by its ID.
-    stop_all():
-        Stops all containers.
-    stop_container(container_id):
-        Stops a specific container by its ID.
-    remove_all():
-        Removes all containers and clears the container list.
-    remove_container(container_id):
-        Removes a specific container by its ID and updates the container list.
-    wait_for_all():
-        Waits for all containers to finish.
-    wait_for_container(container_id):
-        Waits for a specific container to finish by its ID.
-    """
-    
     
     def __init__(self, network_name="benchmark_network"):
         self.client = docker.from_env()
@@ -48,6 +12,18 @@ class ContainerManager:
         except docker.errors.NotFound:
             self.network = self.client.networks.create(network_name, driver="bridge")
             self.network_name = network_name
+        self.topics_map = {}
+        
+    def topics_and_publishers_lists(self, topic_filter):
+        topics_list = []
+        publishers_list = []
+        for topic in self.topics_map:
+            if not topic in topic_filter:
+                continue
+            for publisher in self.topics_map[topic]:
+                topics_list.append(topic)
+                publishers_list.append(publisher)
+        return topics_list, publishers_list
         
     @staticmethod
     def return_container_ids(method):
@@ -109,17 +85,22 @@ class ContainerManager:
             print(f"Created container {container.name}")
         except docker.errors.DockerException as e:
             raise ValueError(f"Failed to start publisher {pub_id}") from e
+        for topic in topics:
+            if not topic in self.topics_map:
+                self.topics_map[topic] = []
+            self.topics_map[topic].append(container.name)
         return container.name
     
     # @return_container_ids
     def start_consumer(self, tech_name, con_id, topics, backlog_size = None, paused = True, mode = None):
         print(f"Starting consumer {con_id} subscribed to topics {topics} with backlog_size {backlog_size} using {tech_name}")
         try:
+            topics_list, publishers_list = self.topics_and_publishers_lists(topics)
             environment = {
                 "TECHNOLOGY": tech_name,
                 "CONTAINER_ID": con_id,
-                # "CONSUMER_ENDPOINT": f"{tech_name}-{config['endpoint']}",
-                "TOPICS": ','.join(topics),
+                "CONSUMER_ENDPOINT": ','.join(publishers_list),
+                "TOPICS": ','.join(topics_list),
                 "BACKLOG_SIZE": backlog_size
             }
             container = self.client.containers.run(

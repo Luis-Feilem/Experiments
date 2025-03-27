@@ -33,35 +33,47 @@ void ZeroMQP2PConsumer::initialize() {
     console.log_debug("[ZeroMQP2P Consumer] initializing...");
     const char* vendpoint = std::getenv("CONSUMER_ENDPOINT");
     const char* vtopics = std::getenv("TOPICS");
-    std::string endpoint = "";
-    std::string topics = "";
+    std::set<std::string> unique_publishers;
+    std::set<std::string> unique_topics;
     std::string consumer_id = std::getenv("CONTAINER_ID");
     if (!vendpoint) {
-        endpoint = "tcp://zeromq_p2p-P" + consumer_id.substr(1) + ":5555";
-        console.log_debug("[ZeroMQP2P Consumer] CONSUMER_ENDPOINT not set, default to publisher with same numerical id: " + endpoint);
+        unique_publishers.insert("zeromq_p2p-P" + consumer_id.substr(1));
+        console.log_debug("[ZeroMQP2P Consumer] CONSUMER_ENDPOINT not set, default to publisher with same numerical id: zeromq_p2p-P" + consumer_id.substr(1));
     }
     else{
-        endpoint = "tcp://" + std::string(std::getenv("CONSUMER_ENDPOINT")) + ":5555";
+        std::istringstream publishers(vendpoint);
+        std::string publisher;
+        while(std::getline(publishers, publisher, ',')){
+            if(!publisher.empty()){
+                unique_publishers.insert(publisher);
+            }
+        }
     }
     if (!vtopics) {
-        topics = consumer_id.substr(1);
-        throw std::runtime_error("TOPICS environment variable not set, default to same id as the consumer: ");
+        unique_topics.insert(consumer_id.substr(1));
+        console.log_debug("[ZeroMQP2P Consumer] TOPICS not set, default to publisher with same numerical id: " + consumer_id.substr(1));
     }
-    else {
-        topics = vtopics;
-    }
-
-    console.log_debug("[ZeroMQP2P Consumer] Connecting to " + endpoint);
-    try {
-        subscriber.connect(endpoint);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        // Subscribe to multiple topics
-        std::istringstream ss(topics);
+    else{
+        std::istringstream topics(vtopics);
         std::string topic;
-        while (std::getline(ss, topic, ',')) {
+        while(std::getline(topics, topic, ',')){
+            if(!topic.empty()){
+                unique_topics.insert(topic);
+            }
+        }
+    }
+
+    try {
+        for (const auto& topic : unique_topics){
+            console.log_debug("[ZeroMQP2P Consumer] Subscribing to topic " + topic);
             subscribe(topic);
         }
+        for(const auto& publisher : unique_publishers){
+            console.log_debug("[ZeroMQP2P Consumer] Connecting to publisher " + publisher);
+            subscriber.connect("tcp://" + publisher + ":5555");
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
         console.log_debug("[ZeroMQP2P Consumer] Connected and subscribed.");
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Consumer] Initialization failed: " + std::string(e.what()));

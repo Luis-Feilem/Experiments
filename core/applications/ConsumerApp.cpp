@@ -8,7 +8,7 @@ void ConsumerApp::create_consumer() {
     
     consumer = ConsumerFactory::create(technology, console);
     console.log_debug("[ConsumerApp] Created " + technology + " consumer");
-    }
+}
 
 // Initializes and runs the consumer logic
 void ConsumerApp::run() {

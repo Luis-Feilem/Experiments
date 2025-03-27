@@ -4,6 +4,9 @@
 #include "../../core/interfaces/IConsumer.hpp"
 #include <zmq.hpp>
 #include <string>
+#include <sstream>
+#include <set>
+#include <iostream>
 #include "Logger.hpp"
 
 class ZeroMQP2PConsumer : public IConsumer {
