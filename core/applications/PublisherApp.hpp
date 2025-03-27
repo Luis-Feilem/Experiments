@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 #include "Logger.hpp"
 #include "PublisherFactory.hpp"
@@ -30,17 +31,24 @@ public:
         log_level = log_level;
         console = Logger(log_level);
     }
-    virtual ~PublisherApp() = default;
+    ~PublisherApp() = default;
 
 
     // Loads values from environment variables into the attributes
-    virtual void load_from_env();
+    void load_from_env();
 
     // Factory call to Create Publisher
-    virtual void create_publisher();
+    void create_publisher();
 
     // Runs the publisher logic (can now be fully generalized)
-    virtual void run();
+    void run();
+
+private:
+    // Runs to send a number of messages
+    void run_messages();
+
+    // Runs for a set duration
+    void run_duration();
 };
 
 #endif // IPUBLISHER_APP_HPP

@@ -64,26 +64,53 @@ void PublisherApp::run() {
         + " messages every " + std::to_string(update_every) + " us"
     );
 
-    int i = 0;
-    while (i < message_count - 1) {
-        console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
-        std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-        publisher->send_message(message);
-        console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1) + ". Now sleeping for " + std::to_string(update_every) + "us");
-        std::this_thread::sleep_for(std::chrono::microseconds(update_every));
-        i++;
+    if (message_count > 0) {
+        run_messages();
     }
-    console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
-    std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-    publisher->send_message(message);
-    console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
-    i++;
-
+    else if (duration > 0) {
+        run_duration();
+    }
+    else{
+        console.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive values. No messages are sent.");
+    }
     // Send termination signal (poison pill)
     publisher->send_message("__END__");
     console.log_debug("[PublisherApp] Sent termination signal");
 }
 
+void PublisherApp::run_messages(){
+    int i = 0;
+    while (i < message_count) {
+        console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
+        std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
+        publisher->send_message(message);
+        console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
+        if (i < message_count){
+            console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
+            std::this_thread::sleep_for(std::chrono::microseconds(update_every));
+        }
+        i++;
+    }
+}
+
+void PublisherApp::run_duration(){
+    using namespace std::chrono;
+    auto start_time = steady_clock::now();
+    auto end_time = start_time + seconds(duration);
+
+    int i = 0;
+    while (steady_clock::now() < end_time) {
+        console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1) + " on topics " + topics);
+        std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
+        publisher->send_message(message);
+        console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
+        console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
+        std::this_thread::sleep_for(microseconds(update_every));
+
+        ++i;
+    }
+    console.log_info("[PublisherApp] Duration-based sending complete after " + std::to_string(duration) + "s");
+}
 
 int main(int argc, char * argv[]) {
     std::ios::sync_with_stdio(false); // Disable stream buffering

@@ -23,13 +23,13 @@ public:
         log_level = log_level;
         console = Logger(log_level);
     }
-    virtual ~ConsumerApp() = default;
+    ~ConsumerApp() = default;
 
     // Factory call to Create Consumer
-    virtual void create_consumer();
+    void create_consumer();
 
     // Initializes and runs the consumer logic
-    virtual void run();
+    void run();
 };
 
 #endif // ICONSUMER_APP_HPP
