@@ -32,11 +32,13 @@ vcpkg/packages/
 *.dockerignore
 docker-compose.override.yml
 
-# Ignore logs, diagrams and temporary files
+# Ignore logs, diagrams, data and temporary files
 *.log
 *.tmp
 *.swp
 *.puml
+*.csv
+*.json
 
 # Ignore Python virtual environments (if used for data processing)
 venv/
