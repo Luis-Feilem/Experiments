@@ -94,7 +94,7 @@ void ZeroMQP2PConsumer::initialize() {
         }
     }
     if (!vtopics) {
-        subscribed_topics.insert(consumer_id.substr(1));
+        subscribed_streams.insert({"zeromq_p2p-P" + consumer_id.substr(1), consumer_id.substr(1)});
         console.log_debug("[ZeroMQP2P Consumer] TOPICS not set, default to publisher with same numerical id: " + consumer_id.substr(1));
     }
     else{
@@ -102,17 +102,15 @@ void ZeroMQP2PConsumer::initialize() {
         std::string topic;
         while(std::getline(topics, topic, ',')){
             if(!topic.empty()){
-                subscribed_topics.insert(topic);
-                // could move the logic to subscribe to topic here?
+                for (const auto& publisher : unique_publishers){
+                    subscribed_streams.insert({publisher, topic});
+                }
+                subscribe(topic);
             }
         }
     }
 
     try {
-        for (const auto& topic : subscribed_topics){
-            console.log_debug("[ZeroMQP2P Consumer] Subscribing to topic " + topic);
-            subscribe(topic);
-        }
         for(const auto& publisher : unique_publishers){
             console.log_debug("[ZeroMQP2P Consumer] Connecting to publisher " + publisher);
             subscriber.connect("tcp://" + publisher + ":5555");
@@ -154,14 +152,16 @@ Payload ZeroMQP2PConsumer::receive_message() {
         // std::string topic = message.substr(0, space_pos);
         // std::string payload = message.substr(space_pos + 1);
         std::string topic;
+        std::string source = "";
         payload = deserialize_payload_with_topic(zmq_message.data(), zmq_message.size(), topic);
 
         console.log_info("[ZeroMQP2P Consumer] Received " + std::to_string(static_cast<unsigned long long> (zmq_message.size())) + "B in topic " + topic);
-        if (payload.label == "__END__") {
-            terminated_topics.insert(topic);
-            console.log_info("[ZeroMQP2P Consumer] Received termination for topic: " + topic);
+        if (payload.label.find("__END__")  != std::string::npos) {
+            source = payload.label.substr(0, payload.label.find(":"));
+            terminated_streams.insert({source, topic});
+            console.log_info("[ZeroMQP2P Consumer] Received termination for topic: " + topic + " from source " + source);
     
-            if (terminated_topics.size() == subscribed_topics.size()) {
+            if (terminated_streams.size() == subscribed_streams.size()) {
                 console.log_info("[ZeroMQP2P Consumer] All publishers terminated.");
                 return Payload{"__END__", {}};  // Final poison pill
             } else {

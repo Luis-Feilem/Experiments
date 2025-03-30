@@ -51,6 +51,14 @@ private:
 
     // Runs for a set duration
     void run_duration();
+
+    Payload generate_termination_message();
+
+    Payload generate_payload_in_memory(size_t target_bytes);
+
+    std::vector<Payload> generate_payloads(size_t min_size, size_t max_size, size_t num_samples);
+
+    const Payload& pick_random_payload(const std::vector<Payload>& payloads);
 };
 
 #endif // IPUBLISHER_APP_HPP

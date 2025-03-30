@@ -20,21 +20,22 @@ void ConsumerApp::run() {
     while (true) {
         console.log_debug("[ConsumerApp] Waiting for message...");
         Payload message = consumer->receive_message();
-        console.log_debug("[ConsumerApp] Received message with " + std::to_string(message.values.size()) + " B");
+        console.log_debug("[ConsumerApp] Received message with " + std::to_string(message.values.size()) + " values");
         if (message.label == ""){
             console.log_info("[ConsumerApp] Received message with no label -> Stopping.");
             break;
         }
         if (message.label == "__ENDTOPIC__") {
             termination_signals++;
-            console.log_info("[ConsumerApp] Received termination from one topic, total is now " + std::to_string(termination_signals));
+            console.log_info("[ConsumerApp] Received termination, total is now " + std::to_string(termination_signals));
             continue; // Not a usable payload
         }
         if (message.label == "__END__") {
-            console.log_info("[ConsumerApp] Received termination from all topics (" + std::to_string(termination_signals) + ")");
+            termination_signals++;
+            console.log_info("[ConsumerApp] Received termination from all sources (" + std::to_string(termination_signals) + ")");
             break;
         }
-        console.log_info("[ConsumerApp] Received message from " + message.label);
+        console.log_info("[ConsumerApp] Received update on " + message.label);
         // if (message.label == "__END__") {
         //     console.log_info("[ConsumerApp] Received termination signal. Stopping.");
         //     break;

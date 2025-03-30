@@ -9,8 +9,8 @@
 class IConsumer {
 protected:
     Logger console;
-    std::set<std::string> terminated_topics;
-    std::set<std::string> subscribed_topics;
+    std::set<std::pair<std::string, std::string>> terminated_streams;
+    std::set<std::pair<std::string, std::string>> subscribed_streams;
 
 public:
     inline IConsumer(const Logger& logger) {

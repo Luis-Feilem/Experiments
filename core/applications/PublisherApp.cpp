@@ -12,7 +12,7 @@ T from_string(const std::string& str, T default_value) {
 }
 
 // Random alphanumeric string
-std::string generate_random_string(size_t length) {
+inline std::string generate_random_string(size_t length) {
     static const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<> dist(0, chars.size() - 1);
@@ -25,16 +25,16 @@ std::string generate_random_string(size_t length) {
     return result;
 }
 // Generate termination message
-Payload generate_termination_message(){
+Payload PublisherApp::generate_termination_message(){
     Payload payload;
 
-    payload.label = "__END__";
+    payload.label = id + ":__END__"; // add "source" information to termination signal
     payload.values.reserve(0);
     return payload;
 }
 
 // Generate one Payload with roughly target_bytes in memory
-Payload generate_payload_in_memory(size_t target_bytes) {
+Payload PublisherApp::generate_payload_in_memory(size_t target_bytes) {
     Payload payload = {"",std::vector<double>()};
 
     size_t label_length = 5 + (std::rand() % 15);  // 5–19 chars
@@ -56,7 +56,7 @@ Payload generate_payload_in_memory(size_t target_bytes) {
 }
 
 // Batch generation of payloads across size range
-std::vector<Payload> generate_payloads(size_t min_size, size_t max_size, size_t num_samples) {
+std::vector<Payload> PublisherApp::generate_payloads(size_t min_size, size_t max_size, size_t num_samples) {
     std::vector<Payload> payloads;
     if (num_samples <= 1) {
         payloads.push_back(generate_payload_in_memory(min_size));
@@ -73,7 +73,7 @@ std::vector<Payload> generate_payloads(size_t min_size, size_t max_size, size_t 
 }
 
 // Pick a random payload from the pool
-const Payload& pick_random_payload(const std::vector<Payload>& payloads) {
+const Payload& PublisherApp::pick_random_payload(const std::vector<Payload>& payloads) {
     static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<> dist(0, payloads.size() - 1);
     return payloads[dist(rng)];
