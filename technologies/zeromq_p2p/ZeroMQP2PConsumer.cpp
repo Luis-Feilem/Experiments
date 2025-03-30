@@ -85,30 +85,32 @@ void ZeroMQP2PConsumer::initialize() {
         console.log_debug("[ZeroMQP2P Consumer] CONSUMER_ENDPOINT not set, default to publisher with same numerical id: zeromq_p2p-P" + consumer_id.substr(1));
     }
     else{
-        std::istringstream publishers(vendpoint);
-        std::string publisher;
-        while(std::getline(publishers, publisher, ',')){
-            if(!publisher.empty()){
-                unique_publishers.insert(publisher);
-            }
+        if (!vtopics) {
+            subscribed_streams.insert({"zeromq_p2p-P" + consumer_id.substr(1), consumer_id.substr(1)});
+            subscribe(consumer_id.substr(1));
+            console.log_debug("[ZeroMQP2P Consumer] TOPICS not set, default to publisher with same numerical id: " + consumer_id.substr(1));
         }
-    }
-    if (!vtopics) {
-        subscribed_streams.insert({"zeromq_p2p-P" + consumer_id.substr(1), consumer_id.substr(1)});
-        console.log_debug("[ZeroMQP2P Consumer] TOPICS not set, default to publisher with same numerical id: " + consumer_id.substr(1));
-    }
-    else{
-        std::istringstream topics(vtopics);
-        std::string topic;
-        while(std::getline(topics, topic, ',')){
-            if(!topic.empty()){
-                for (const auto& publisher : unique_publishers){
-                    subscribed_streams.insert({publisher, topic});
+        else{
+            std::istringstream topics(vtopics);
+            std::string topic;
+            std::istringstream publishers(vendpoint);
+            std::string publisher;
+            // console.log_debug("[ZeroMQP2P Consumer] Subscribing to topic list: " + std::to_string(vtopics));
+            while(std::getline(topics, topic, ',')){
+                std::getline(publishers, publisher, ',');
+                if(!publisher.empty()){
+                    unique_publishers.insert(publisher);
                 }
-                subscribe(topic);
+                console.log_debug("[ZeroMQP2P Consumer] Handling subscription to topic " + topic);
+                if(!topic.empty()){
+                    console.log_info("[ZeroMQP2P Consumer] Connecting to stream ("+ publisher + "," + topic + ")");
+                    subscribed_streams.insert({publisher, topic});
+                    subscribe(topic);
+                }
             }
         }
     }
+    
 
     try {
         for(const auto& publisher : unique_publishers){
@@ -160,6 +162,7 @@ Payload ZeroMQP2PConsumer::receive_message() {
             source = payload.label.substr(0, payload.label.find(":"));
             terminated_streams.insert({source, topic});
             console.log_info("[ZeroMQP2P Consumer] Received termination for topic: " + topic + " from source " + source);
+            console.log_debug("[ZeroMQP2P Consumer] Streams closed: " + std::to_string(terminated_streams.size()) + "/" + std::to_string(subscribed_streams.size()));
     
             if (terminated_streams.size() == subscribed_streams.size()) {
                 console.log_info("[ZeroMQP2P Consumer] All publishers terminated.");
