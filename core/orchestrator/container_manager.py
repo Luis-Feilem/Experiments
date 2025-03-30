@@ -67,7 +67,10 @@ class ContainerManager:
                 "TOPICS": ','.join(topics),
                 "MESSAGES": n_messages,
                 "DURATION": duration,
-                "UPDATE_EVERY": pub_rate
+                "UPDATE_EVERY": pub_rate,
+                "PAYLOAD_MIN_SIZE": 1,
+                "PAYLOAD_MAX_SIZE": 100, # read msg size from config
+                "PAYLOAD_SAMPLES": 5, # can be hardcoded for now?
             }
             print(f"Environment: {environment}")
             print(f"Starting container from image {tech_name}_publisher in mode {mode}")

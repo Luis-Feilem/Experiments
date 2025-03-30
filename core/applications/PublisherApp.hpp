@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <random>
 
 #include "Logger.hpp"
 #include "PublisherFactory.hpp"
@@ -20,6 +21,10 @@ protected:
     int message_count;
     int duration;
     int update_every;
+    size_t payload_min_size;
+    size_t payload_max_size;
+    size_t payload_samples;
+    std::vector<Payload> payloads;
 
     Logger console;
     Logger::LogLevel log_level;
@@ -27,10 +32,7 @@ protected:
     std::unique_ptr<IPublisher> publisher;
 
 public:
-    PublisherApp(Logger::LogLevel log_level = Logger::LogLevel::INFO) {
-        log_level = log_level;
-        console = Logger(log_level);
-    }
+    PublisherApp(Logger::LogLevel log_level = Logger::LogLevel::INFO);
     ~PublisherApp() = default;
 
 

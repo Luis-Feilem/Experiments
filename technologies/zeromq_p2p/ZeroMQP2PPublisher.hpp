@@ -16,7 +16,10 @@ public:
     ~ZeroMQP2PPublisher();
 
     void initialize() override;
-    void send_message(const std::string &message) override;
+    void send_message(const Payload &message) override;
+
+protected:
+    
 };
 
 #endif // ZEROMQ_PUBLISHER_HPP

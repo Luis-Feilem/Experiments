@@ -12,22 +12,34 @@ void ConsumerApp::create_consumer() {
 
 // Initializes and runs the consumer logic
 void ConsumerApp::run() {
+    int termination_signals = 0;
     console.log_debug("[ConsumerApp] Starting consumer");
     consumer->initialize();
     console.log_debug("[ConsumerApp] Initialized consumer");
 
     while (true) {
         console.log_debug("[ConsumerApp] Waiting for message...");
-        std::string message = consumer->receive_message();
-        if (message == ""){
-            console.log_info("[ConsumerApp] Received empty message -> Stopping.");
+        Payload message = consumer->receive_message();
+        console.log_debug("[ConsumerApp] Received message with " + std::to_string(message.values.size()) + " B");
+        if (message.label == ""){
+            console.log_info("[ConsumerApp] Received message with no label -> Stopping.");
             break;
         }
-        console.log_info("[ConsumerApp] Received: " + message);
-        if (message == "__END__") {
-            console.log_info("[ConsumerApp] Received termination signal. Stopping.");
+        if (message.label == "__ENDTOPIC__") {
+            termination_signals++;
+            console.log_info("[ConsumerApp] Received termination from one topic, total is now " + std::to_string(termination_signals));
+            continue; // Not a usable payload
+        }
+        if (message.label == "__END__") {
+            console.log_info("[ConsumerApp] Received termination from all topics (" + std::to_string(termination_signals) + ")");
             break;
         }
+        console.log_info("[ConsumerApp] Received message from " + message.label);
+        // if (message.label == "__END__") {
+        //     console.log_info("[ConsumerApp] Received termination signal. Stopping.");
+        //     break;
+        // }
+        // Poison pill logic should be handled at interface-level
     }
 }
 

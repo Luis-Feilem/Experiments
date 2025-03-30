@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Logger.hpp"
+#include "Payload.h"
 
 class IPublisher {
 protected:
@@ -18,7 +19,7 @@ public:
     virtual void initialize() = 0;
 
     // Sends a message
-    virtual void send_message(const std::string &message) = 0;
+    virtual void send_message(const Payload &message) = 0;
 };
 
 #endif // IPUBLISHER_HPP
