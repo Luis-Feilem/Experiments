@@ -168,6 +168,9 @@ void PublisherApp::create_publisher() {
 void PublisherApp::run() {
     console.log_debug("[PublisherApp] Starting publisher");
     publisher->initialize();
+    // wait for consumer to start and connect, and to synchronize with metrics gathering
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
     console.log_debug("[PublisherApp] Initialized publisher. It will send " + std::to_string(message_count) 
         + " messages every " + std::to_string(update_every) + " us"
     );

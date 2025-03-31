@@ -61,6 +61,7 @@ class ScenarioConfigManager:
     
     @staticmethod
     def generate_scenario_name(scenario):
+        # TODO replace str(scenario.get...) with self.get_...
         name_parts = []
 
         # Common messaging identifiers
@@ -83,7 +84,7 @@ class ScenarioConfigManager:
         bw = str(scenario.get("bandwidthMbps", "BW")).replace('.','_')
         lat = str(scenario.get("latencyMs", "L")).replace('.','_')
         pl = str(scenario.get("packetLossPerc", "PL")).replace('.','_')
-        jit = str(scenario.get("jitter", "J")).replace('.','_')
+        jit = str(scenario.get("jitterMs", "J")).replace('.','_')
         name_parts.append(f"{bw}mbps{lat}ms{pl}pl{jit}j")
 
         return "-".join(name_parts)

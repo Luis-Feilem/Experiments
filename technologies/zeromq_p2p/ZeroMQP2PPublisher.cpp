@@ -70,7 +70,6 @@ void ZeroMQP2PPublisher::initialize() {
     console.log_debug("[ZeroMQP2P Publisher] Binding to " + endpoint);
     try {
         publisher.bind(endpoint);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // wait for consumer to start and connect
         console.log_debug("[ZeroMQP2P Publisher] Bound to " + endpoint);
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Publisher] Initialization failed: " + std::string(e.what()));
