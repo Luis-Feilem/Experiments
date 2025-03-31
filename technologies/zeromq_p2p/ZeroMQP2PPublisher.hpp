@@ -16,7 +16,7 @@ public:
     ~ZeroMQP2PPublisher();
 
     void initialize() override;
-    void send_message(const Payload &message) override;
+    void send_message(const Payload &message, std::string topic) override;
 
 protected:
     

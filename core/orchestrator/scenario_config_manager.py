@@ -12,7 +12,7 @@ class ScenarioConfigManager:
             "consumerAssignmentStrategy"
         ]
         self.common_parts = [
-            "numProducers",
+            "numProducersPerTopic",
             "numConsumers", 
             "numTopics", 
             "parallelSubscriptionsPerTopic",
@@ -65,13 +65,13 @@ class ScenarioConfigManager:
         name_parts = []
 
         # Common messaging identifiers
-        p = str(scenario.get("numProducers", "P")).replace('.','_')
-        c = str(scenario.get("numConsumers", "C")).replace('.','_')
-        t = str(scenario.get("numTopics", "T")).replace('.','_')
-        pc = str(scenario.get("parallelSubscriptionsPerTopic", "PC")).replace('.','_')
-        b = str(scenario.get("messageSizeBytes", "B")).replace('.','_')
-        w = str(scenario.get("producerWaitInMicroSeconds", "W")).replace('.','_')
-        bm = str(scenario.get("backlogSizeMessages", "BM")).replace('.','_')
+        p = ScenarioConfigManager.get_numProducersPerTopic(scenario)
+        c = ScenarioConfigManager.get_numConsumers(scenario)
+        t = ScenarioConfigManager.get_numTopics(scenario)
+        pc = ScenarioConfigManager.get_parallelSubscriptionsPerTopic(scenario)
+        b = ScenarioConfigManager.get_messageSizeBytes(scenario)
+        w = ScenarioConfigManager.get_producerWaitInMicroSeconds(scenario)
+        bm = ScenarioConfigManager.get_backlogSizeMessages(scenario)
         name_parts.append(f"{p}p{c}c{t}t{pc}pc{b}b{w}us{bm}bm")
 
         # Exclusive mode
@@ -81,13 +81,13 @@ class ScenarioConfigManager:
             name_parts.append(f"{int(scenario[EXCLUSIVE_MSG])}m")
 
         # Network-related identifiers
-        bw = str(scenario.get("bandwidthMbps", "BW")).replace('.','_')
-        lat = str(scenario.get("latencyMs", "L")).replace('.','_')
-        pl = str(scenario.get("packetLossPerc", "PL")).replace('.','_')
-        jit = str(scenario.get("jitterMs", "J")).replace('.','_')
+        bw = ScenarioConfigManager.get_bandwidthMbps(scenario)
+        lat = ScenarioConfigManager.get_latencyMs(scenario)
+        pl = ScenarioConfigManager.get_packetLossPerc(scenario)
+        jit = ScenarioConfigManager.get_jitterMs(scenario)
         name_parts.append(f"{bw}mbps{lat}ms{pl}pl{jit}j")
 
-        return "-".join(name_parts)
+        return "-".join(name_parts).replace('.','_')
     
     @staticmethod
     def get_producerAssignmentStrategy(scenario):
@@ -98,8 +98,8 @@ class ScenarioConfigManager:
         return scenario['consumerAssignmentStrategy']
     
     @staticmethod
-    def get_numProducers(scenario):
-        return scenario['numProducers']
+    def get_numProducersPerTopic(scenario):
+        return scenario['numProducersPerTopic']
  
     @staticmethod
     def get_numConsumers(scenario):

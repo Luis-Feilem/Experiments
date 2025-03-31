@@ -76,37 +76,28 @@ void ZeroMQP2PPublisher::initialize() {
     }
 }
 
-void ZeroMQP2PPublisher::send_message(const Payload &message) {
-    const char* topics = std::getenv("TOPICS");
-    if (!topics) {
-        throw std::runtime_error("TOPICS environment variable not set.");
-    }
+void ZeroMQP2PPublisher::send_message(const Payload &message, std::string topic) {
+    try {
+        // std::string full_message = topic + " " + message;
+        // zmq::message_t zmq_message(full_message.begin(), full_message.end());
+        std::vector<char> buffer = serialize_payload_with_topic(topic, message);
+        // Debug print to make sure serialization worked:
+        console.log_debug("[ZeroMQP2P Publisher] Serialized buffer size: " + std::to_string(buffer.size()));
 
-    std::istringstream ss(topics);
-    std::string topic;
-    while (std::getline(ss, topic, ',')) {
-        try {
-            // std::string full_message = topic + " " + message;
-            // zmq::message_t zmq_message(full_message.begin(), full_message.end());
-            std::vector<char> buffer = serialize_payload_with_topic(topic, message);
-            // Debug print to make sure serialization worked:
-            console.log_debug("[ZeroMQP2P Publisher] Serialized buffer size: " + std::to_string(buffer.size()));
-
-            if (buffer.empty()) {
-                console.log_error("[ZeroMQP2P Publisher] Buffer is EMPTY after serialization!");
-            }
-            std::ostringstream hex_out;
-            for (char c : buffer) {
-                hex_out << std::hex << std::setw(2) << std::setfill('0') << (static_cast<int>(c) & 0xff) << " ";
-            }
-            console.log_debug("[ZeroMQP2P Publisher] Serialized bytes: " + hex_out.str());
-
-            zmq::message_t zmq_message(buffer.begin(), buffer.end());
-            console.log_info("[ZeroMQP2P Publisher] [" + topic + "] "+ std::to_string(zmq_message.size()) + " B"); 
-            publisher.send(zmq_message, zmq::send_flags::none);
-            console.log_debug("[ZeroMQP2P Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
-        } catch (const zmq::error_t &e) {
-            console.log_error("[ZeroMQP2P Publisher] Send failed: " + std::string(e.what()));
+        if (buffer.empty()) {
+            console.log_error("[ZeroMQP2P Publisher] Buffer is EMPTY after serialization!");
         }
+        std::ostringstream hex_out;
+        for (char c : buffer) {
+            hex_out << std::hex << std::setw(2) << std::setfill('0') << (static_cast<int>(c) & 0xff) << " ";
+        }
+        console.log_debug("[ZeroMQP2P Publisher] Serialized bytes: " + hex_out.str());
+
+        zmq::message_t zmq_message(buffer.begin(), buffer.end());
+        console.log_info("[ZeroMQP2P Publisher] [" + topic + "] "+ std::to_string(zmq_message.size()) + " B"); 
+        publisher.send(zmq_message, zmq::send_flags::none);
+        console.log_debug("[ZeroMQP2P Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
+    } catch (const zmq::error_t &e) {
+        console.log_error("[ZeroMQP2P Publisher] Send failed: " + std::string(e.what()));
     }
 }

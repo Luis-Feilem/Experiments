@@ -46,6 +46,18 @@ public:
     void run();
 
 private:
+    // Send update on topic
+    void publish_on_topic(std::string topic);
+
+    // Terminate topic
+    void terminate_topic(std::string topic);
+
+    // Send update on all topics
+    void publish_on_all_topics();
+
+    // Terminate all topics
+    void terminate_all_topics();
+
     // Runs to send a number of messages
     void run_messages();
 

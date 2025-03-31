@@ -19,7 +19,7 @@ public:
     virtual void initialize() = 0;
 
     // Sends a message
-    virtual void send_message(const Payload &message) = 0;
+    virtual void send_message(const Payload &message, std::string topic) = 0;
 };
 
 #endif // IPUBLISHER_HPP

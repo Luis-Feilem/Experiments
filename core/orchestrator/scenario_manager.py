@@ -15,7 +15,7 @@ class ScenarioManager:
     def load_config(self):
         self.producer_strat = ScenarioConfigManager.get_producerAssignmentStrategy(self.scenario)
         self.consumer_strat = ScenarioConfigManager.get_consumerAssignmentStrategy(self.scenario)
-        self.num_producers = ScenarioConfigManager.get_numProducers(self.scenario)
+        self.num_producers_per_topic = ScenarioConfigManager.get_numProducersPerTopic(self.scenario)
         self.num_consumers = ScenarioConfigManager.get_numConsumers(self.scenario)
         self.num_topics = ScenarioConfigManager.get_numTopics(self.scenario)
         self.parallel_channels_per_topic = ScenarioConfigManager.get_parallelSubscriptionsPerTopic(self.scenario)
@@ -54,17 +54,22 @@ class ScenarioManager:
         
     def publisher_configs(self):
         pub_configs = {}
-        for i in range(self.num_producers):
+        for i in range(self.num_producers_per_topic):
             pub_id = i
-            print(f"[SM] building config for producer {pub_id} of {self.num_producers}")
+            print(f"[SM] building config for producer {pub_id} of {self.num_producers_per_topic}")
             topics = []
-            if self.producer_strat == "round-robin":
-                topics.append(f"{i%self.num_topics}")
-            elif self.producer_strat == "random":
-                topics.append(f"{random.choice(range(self.num_topics))}")
+            # TODO assignment strategies
+            # if self.producer_strat == "round-robin":
+            #     topics.append(f"{i%self.num_topics}")
+            # elif self.producer_strat == "random":
+            #     topics.append(f"{random.choice(range(self.num_topics))}")
+            for i in range(self.num_topics):
+                topics.append(i)
+            print(f"[SM] TOPICS = {topics} -> {','.join([str(i) for i in topics])}")
+            
             pub_configs[pub_id] = {
                 "pub_id": f"P{pub_id}", 
-                "topics": topics,
+                "topics": [str(i) for i in topics],
                 "pub_rate": self.producer_rate,
                 "n_messages": self.number_of_messages,
                 "duration": self.duration
