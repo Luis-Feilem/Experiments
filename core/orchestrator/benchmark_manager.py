@@ -12,7 +12,6 @@ SCENARIOS_DIR = "test_scenarios"
 
 class BenchmarkManager:
     
-    
     def __init__(self, config_path, metrics_interval=2.0):
         self.interval = metrics_interval
         self.tm = None
@@ -24,14 +23,16 @@ class BenchmarkManager:
         self.cm = ContainerManager()
 
     def run(self, mode = None):
-        print(f"Using scenario_config from {self.scenario_config_file}")
+        print(f"[BM] Using scenario_config from {self.scenario_config_file}")
         technologies = self.config['technologies']
         for tech_name in technologies:
             self.tm = TechnologyManager(os.path.join(TECHNOLOGIES_DIR,tech_name))
-            print(f"Validating technology {tech_name}...")
+            print(f"[BM] Validating technology {tech_name}...")
             if not self.tm.validate_technology():
                 raise ValueError(f"Invalid technology: {tech_name}")
-            print(f"Running experiments for technology {tech_name} in mode {mode}...")
+            print(f"[BM] Setting up {tech_name} extra resources...")
+            self.tm.setup_tech()
+            print(f"[BM] Running experiments for technology {tech_name} in mode {mode}...")
             for scenario_messages in self.scm.iter_valid_combinations(EXCLUSIVE_MSG):
                 self.execute_experiment(tech_name, scenario_messages, mode)
             for scenario_time in self.scm.iter_valid_combinations(EXCLUSIVE_TIME):
@@ -41,8 +42,10 @@ class BenchmarkManager:
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)
         metrics = MetricsCollector(tech_name, scenario_name, interval=self.interval)
         try:
-            print(f"Using technology {tech_name} to run scenario {scenario_name} ...")
-            print(f"Starting and pausing all containers in mode {mode}...")
+            print(f"[BM] Using technology {tech_name} to run scenario {scenario_name} ...")
+            self.tm.reset_tech()
+            print(f"[BM] {self.tm.tech_name} reset completed")
+            print(f"[BM] Starting and pausing all containers in mode {mode}...")
             sm = ScenarioManager(scenario_config)
             for p_id, p_config in sm.publisher_configs().items():
                 print(f"[BM] starting publisher with config {p_config}")
@@ -65,15 +68,15 @@ class BenchmarkManager:
                 #     raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
             
             metrics.start()    
-            print("All containers started. Unpausing...")
+            print("[BM] All containers started. Unpausing...")
             self.cm.wake_all()
-            print("All containers running...")
+            print("[BM] All containers running...")
             self.cm.wait_for_all()
             metrics.stop()
             # events_logger = ContainerEventsLogger(tech_name, scenario_name)
             # events_logger.collect_logs()
 
         finally:
-            print("Cleaning up...")
+            print("[BM] Cleaning up...")
             self.cm.stop_all()
             self.cm.remove_all()
