@@ -104,8 +104,8 @@ void ZeroMQP2PConsumer::initialize() {
                 console.log_debug("[ZeroMQP2P Consumer] Handling subscription to topic " + topic);
                 if(!topic.empty()){
                     console.log_info("[ZeroMQP2P Consumer] Connecting to stream ("+ publisher + "," + topic + ")");
-                    subscribed_streams.insert({publisher, topic});
                     subscribe(topic);
+                    subscribed_streams.insert({publisher, topic});
                 }
             }
         }
