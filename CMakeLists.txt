@@ -22,12 +22,20 @@ add_subdirectory(core/applications)
 
 # add as technologies are added (this is UGLY but whatever)
 if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/zeromq_p2p")
-    message(STATUS "Including ZeroMQ P2P technology")
-    add_subdirectory(technologies/zeromq_p2p)
+message(STATUS "Including ZeroMQ P2P technology")
+add_subdirectory(technologies/zeromq_p2p)
+else()
+message(STATUS "Skipping ZeroMQ P2P technology (not found)")
+endif()
+
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/kafka")
     message(STATUS "Including Kafka technology")
     add_subdirectory(technologies/kafka)
 else()
-    message(STATUS "Skipping ZeroMQ P2P technology (not found)")
+    message(STATUS "Skipping Kafka technology (not found)")
 endif()
+
+
 
 # target_link_libraries(MessagingBenchmark PRIVATE core)

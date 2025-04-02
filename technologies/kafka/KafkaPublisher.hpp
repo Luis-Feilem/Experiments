@@ -1,23 +1,26 @@
 #pragma once
 
 #include "../../core/interfaces/IPublisher.hpp"
-#include <cppkafka/cppkafka.h>
-#include <memory>
+#include <librdkafka/rdkafka.h>
 #include <string>
+#include <unordered_map>
 
-const std::string BROKER_ADDRESS = "benchmark_kafka_broker";
-const std::string BROKER_PORT = "9092";
 
 class KafkaPublisher : public IPublisher {
 public:
-    KafkaPublisher(const Logger& logger, std::string broker_address = BROKER_ADDRESS);
-    ~KafkaPublisher() override = default;
+    KafkaPublisher(const Logger& logger);
+    ~KafkaPublisher() override;
 
     void initialize() override;
     void send_message(const Payload& message, std::string topic) override;
 
 private:
+    rd_kafka_t* producer_;
+    rd_kafka_conf_t* conf_;
     std::string broker_;
-    cppkafka::Configuration config_;
-    std::unique_ptr<cppkafka::Producer> producer_;
+
+    std::unordered_map<std::string, rd_kafka_topic_t*> topic_handles_;
+
+    rd_kafka_topic_t* get_or_create_topic_handle(const std::string& topic);
+    void destroy_topic_handle(const std::string& topic);
 };

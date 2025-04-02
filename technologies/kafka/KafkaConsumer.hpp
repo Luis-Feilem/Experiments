@@ -1,18 +1,15 @@
 #pragma once
 
 #include "../../core/interfaces/IConsumer.hpp"
-#include <cppkafka/cppkafka.h>
-#include <memory>
+#include <librdkafka/rdkafka.h>
 #include <string>
 #include <vector>
-
-const std::string BROKER_ADDRESS = "benchmark_kafka_broker";
-const std::string BROKER_PORT = "9092";
+#include <unordered_set>
 
 class KafkaConsumer : public IConsumer {
 public:
     KafkaConsumer(const Logger& logger);
-    ~KafkaConsumer() override = default;
+    ~KafkaConsumer() override;
 
     void initialize() override;
     void subscribe(const std::string& topic) override;
@@ -20,7 +17,10 @@ public:
 
 private:
     std::string broker_;
-    cppkafka::Configuration config_;
-    std::unique_ptr<cppkafka::Consumer> consumer_;
-    std::vector<std::string> topics_;
+    std::unordered_set<std::string> topic_names_;
+
+    rd_kafka_t* consumer_;
+    rd_kafka_conf_t* conf_;
+    rd_kafka_topic_partition_list_t* subscription_list_;
+    bool initialized_;
 };

@@ -12,8 +12,29 @@
         "generator": "Ninja",
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
-          "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+          "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "VCPKG_TARGET_TRIPLET": "x64-windows-static"
         }
+      },
+      {
+        "name": "windows-msvc",
+        "generator": "Visual Studio 17 2022",
+        "architecture": "x64",
+        "binaryDir": "${sourceDir}/build",
+        "cacheVariables": {
+          "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+        }
+      }
+    ],
+    "buildPresets": [
+      {
+          "name": "windows-msvc",
+          "configurePreset": "windows-msvc"
+      },
+      {
+        "name": "windows-vcpkg",
+        "configurePreset": "windows-vcpkg"
       }
     ]
   }

@@ -1,6 +1,7 @@
 import os
 import json
-from .technology_manager import TechnologyManager
+from .technologies.kafka_manager import KafkaManager
+from .technologies.zeromq_p2p_manager import ZeroMQP2PManager
 from .scenario_manager import ScenarioManager
 from .container_manager import ContainerManager
 from .metrics_collector import MetricsCollector
@@ -26,7 +27,13 @@ class BenchmarkManager:
         print(f"[BM] Using scenario_config from {self.scenario_config_file}")
         technologies = self.config['technologies']
         for tech_name in technologies:
-            self.tm = TechnologyManager(os.path.join(TECHNOLOGIES_DIR,tech_name))
+            if tech_name == "kafka":
+                self.tm = KafkaManager(os.path.join(TECHNOLOGIES_DIR,tech_name))
+            elif tech_name == "zeromq_p2p":
+                self.tm = ZeroMQP2PManager(os.path.join(TECHNOLOGIES_DIR, tech_name))
+            else:
+                print(f"[BM] Unknown technology: {tech_name}")
+                return
             print(f"[BM] Validating technology {tech_name}...")
             if not self.tm.validate_technology():
                 raise ValueError(f"Invalid technology: {tech_name}")
@@ -37,14 +44,13 @@ class BenchmarkManager:
                 self.execute_experiment(tech_name, scenario_messages, mode)
             for scenario_time in self.scm.iter_valid_combinations(EXCLUSIVE_TIME):
                 self.execute_experiment(tech_name, scenario_time, mode)
+            self.tm = None
 
     def execute_experiment(self, tech_name, scenario_config, mode = None):
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)
         metrics = MetricsCollector(tech_name, scenario_name, interval=self.interval)
         try:
             print(f"[BM] Using technology {tech_name} to run scenario {scenario_name} ...")
-            self.tm.reset_tech()
-            print(f"[BM] {self.tm.tech_name} reset completed")
             print(f"[BM] Starting and pausing all containers in mode {mode}...")
             sm = ScenarioManager(scenario_config)
             for p_id, p_config in sm.publisher_configs().items():
@@ -80,3 +86,5 @@ class BenchmarkManager:
             print("[BM] Cleaning up...")
             self.cm.stop_all()
             self.cm.remove_all()
+            self.tm.reset_tech()
+            print(f"[BM] Producer and Consumer containers removed, {self.tm.tech_name} reset completed")
