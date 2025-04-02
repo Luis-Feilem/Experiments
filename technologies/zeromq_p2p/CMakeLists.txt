@@ -11,6 +11,7 @@ if(WIN32)
     set(ZMQ_LIB_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows/lib")
     target_link_libraries(zeromq_p2p_technology PRIVATE
         core
+        factories
         "${ZMQ_LIB_DIR}/libzmq-mt-4_3_5.lib"
     )
 elseif(UNIX)
@@ -19,6 +20,7 @@ elseif(UNIX)
     set(ZMQ_LIB_DIR "/usr/lib/x86_64-linux-gnu")
     target_link_libraries(zeromq_p2p_technology PRIVATE
         core
+        factories
         "${ZMQ_LIB_DIR}/libzmq.so"
     )
 endif()
@@ -28,5 +30,5 @@ target_include_directories(zeromq_p2p_technology PUBLIC
     ${ZMQ_INCLUDE_DIR}
 )
 
-target_link_libraries(PublisherApp PRIVATE zeromq_p2p_technology)
-target_link_libraries(ConsumerApp PRIVATE zeromq_p2p_technology)
+target_link_libraries(PublisherApp PRIVATE core factories zeromq_p2p_technology)
+target_link_libraries(ConsumerApp PRIVATE core factories zeromq_p2p_technology)

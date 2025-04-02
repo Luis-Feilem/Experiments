@@ -9,15 +9,12 @@ add_library(core STATIC)
 # Add source files for logger, factory, and interfaces?
 target_sources(core PRIVATE 
         logger/Logger.cpp
-        factory/ConsumerFactory.cpp
-        factory/PublisherFactory.cpp
 )
 
 # Add public headers so they can be included by other targets
 target_include_directories(core 
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/logger
-        ${CMAKE_CURRENT_SOURCE_DIR}/factory
 )
 
 target_link_libraries(core PUBLIC 
@@ -26,4 +23,9 @@ target_link_libraries(core PUBLIC
 
 # Make this library available for use in other projects
 set_target_properties(core PROPERTIES EXPORT_NAME Core)
+
+add_library(factories STATIC factory/PublisherFactory.cpp factory/ConsumerFactory.cpp)
+target_include_directories(factories PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/factory)
+target_link_libraries(factories PUBLIC core)
+set_target_properties(factories PROPERTIES EXPORT_NAME Factories)
 

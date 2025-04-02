@@ -1,9 +1,9 @@
 #include "KafkaPublisher.hpp"
-#include "../../core/factory/PublisherFactory.hpp"
+#include "PublisherFactory.hpp"
 #include <cstdlib>
 #include <cstring>
 
-
+int kafka_tu_alive_marker = 42;
 
 namespace {
     struct Register {
@@ -21,8 +21,10 @@ namespace {
 
 
 KafkaPublisher::KafkaPublisher(const Logger& logger)
-    : IPublisher(logger), producer_(nullptr), conf_(nullptr) {
-    console.log_info("KafkaPublisher created.");
+    try : IPublisher(logger), producer_(nullptr), conf_(nullptr) {
+        console.log_info("[Kafka Publisher] KafkaPublisher created.");
+    } catch (const std::exception &e){
+        console.log_error("[Kafka Publisher] Constructor failed: " + std::string(e.what()));
 }
 
 KafkaPublisher::~KafkaPublisher() {
@@ -63,9 +65,8 @@ void KafkaPublisher::initialize() {
     console.log_info("KafkaProducer initialized successfully.");
 }
 
-void KafkaPublisher::send_message(const Payload& message, std::string topic) {
+inline std::string serialize_payload(const Payload& message){
     std::string serialized;
-
     // Simple binary serialization: [label_len][label][num_vals][vals...]
     uint32_t label_len = static_cast<uint32_t>(message.label.size());
     uint32_t num_vals = static_cast<uint32_t>(message.values.size());
@@ -76,6 +77,11 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
     for (double v : message.values) {
         serialized.append(reinterpret_cast<char*>(&v), sizeof(double));
     }
+    return serialized;
+}
+
+void KafkaPublisher::send_message(const Payload& message, std::string topic) {
+    std::string serialized = serialize_payload(message);
 
     rd_kafka_topic_t* topic_handle = get_or_create_topic_handle(topic);
     if (!topic_handle) {
@@ -106,7 +112,7 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
     }
 }
 
-rd_kafka_topic_t* KafkaPublisher::get_or_create_topic_handle(const std::string& topic) {
+inline rd_kafka_topic_t* KafkaPublisher::get_or_create_topic_handle(const std::string& topic) {
     auto it = topic_handles_.find(topic);
     if (it != topic_handles_.end()) {
         return it->second;
@@ -123,7 +129,7 @@ rd_kafka_topic_t* KafkaPublisher::get_or_create_topic_handle(const std::string& 
     return handle;
 }
 
-void KafkaPublisher::destroy_topic_handle(const std::string& topic) {
+inline void KafkaPublisher::destroy_topic_handle(const std::string& topic) {
     auto it = topic_handles_.find(topic);
     if (it != topic_handles_.end()) {
         rd_kafka_topic_destroy(it->second);

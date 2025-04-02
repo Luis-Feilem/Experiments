@@ -251,6 +251,8 @@ void PublisherApp::run_duration(){
 int main(int argc, char * argv[]) {
     std::ios::sync_with_stdio(false); // Disable stream buffering
     std::cout << "[PublisherApp] Start" << std::endl << std::flush;
+    extern int kafka_tu_alive_marker;
+    std::cout << "[PublisherApp] Kafka TU marker: " << kafka_tu_alive_marker << std::endl;
     try {
         Logger::LogLevel log_level = Logger::LogLevel::INFO;
         if (argc >= 2 && argv[1] != nullptr){

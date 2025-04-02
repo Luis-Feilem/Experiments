@@ -6,21 +6,10 @@
     },
     "configurePresets": [
       {
-        "name": "windows-vcpkg",
-        "hidden": false,
-        "description": "Use vcpkg toolchain and place build files in build/",
-        "generator": "Ninja",
-        "binaryDir": "${sourceDir}/build",
-        "cacheVariables": {
-          "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
-          "VCPKG_TARGET_TRIPLET": "x64-windows-static"
-        }
-      },
-      {
         "name": "windows-msvc",
         "generator": "Visual Studio 17 2022",
         "architecture": "x64",
-        "binaryDir": "${sourceDir}/build",
+        "binaryDir": "${sourceDir}/build/msvc",
         "cacheVariables": {
           "CMAKE_TOOLCHAIN_FILE": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
           "VCPKG_TARGET_TRIPLET": "x64-windows-static"
@@ -32,10 +21,6 @@
           "name": "windows-msvc",
           "configurePreset": "windows-msvc"
       },
-      {
-        "name": "windows-vcpkg",
-        "configurePreset": "windows-vcpkg"
-      }
     ]
   }
   
