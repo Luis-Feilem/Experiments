@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/interfaces/IConsumer.hpp"
+#include "IConsumer.hpp"
 #include <librdkafka/rdkafka.h>
 #include <string>
 #include <vector>

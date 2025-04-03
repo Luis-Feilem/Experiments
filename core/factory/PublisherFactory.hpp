@@ -1,3 +1,4 @@
+#pragma once
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -11,9 +12,7 @@ public:
 
     static std::unique_ptr<IPublisher> create(const std::string& name, Logger console);
 
+    static void debug_print_registry(Logger& logger);
 private:
-    static std::unordered_map<std::string, CreateFunc>& getRegistry(){
-        static std::unordered_map<std::string, CreateFunc> registry;
-        return registry;
-    }
+    static std::unordered_map<std::string, CreateFunc>& getRegistry();
 };

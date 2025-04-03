@@ -12,6 +12,7 @@
 
 #include "Logger.hpp"
 #include "PublisherFactory.hpp"
+#include "TechnologyLoader.hpp"
 
 
 class PublisherApp {

@@ -3,22 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 
-int kafka_tu_alive_marker = 42;
-
-namespace {
-    struct Register {
-        Register() {
-            std::cout << "[Kafka Publisher std] Registering publisher in factory" << std::endl << std::flush;
-            PublisherFactory::registerPublisher("kafka", [](Logger console) -> std::unique_ptr<IPublisher> {
-                console.log_info("[Kafka Publisher] Registering publisher in factory");
-                return std::make_unique<KafkaPublisher>(console);
-            });
-        }
-    };
-
-    static Register reg;
-}
-
 
 KafkaPublisher::KafkaPublisher(const Logger& logger)
     try : IPublisher(logger), producer_(nullptr), conf_(nullptr) {

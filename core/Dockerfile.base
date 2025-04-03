@@ -14,9 +14,7 @@ WORKDIR /app
 COPY ./core /app/core
 COPY ./CMakeLists.txt /app/CMakeLists.txt
 
-RUN mkdir build && cd build && \
-    cmake .. && \
-    cmake --build .
+RUN mkdir /app/build 
 
 # No cmake/build step here!
 ENTRYPOINT ["/bin/bash"]

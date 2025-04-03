@@ -5,7 +5,15 @@
 void ConsumerApp::create_consumer() {
     std::string technology = std::getenv("TECHNOLOGY");
     console.log_debug("[ConsumerApp] Creating consumer for technology " + technology + ", log_level: " + Logger::level_to_string(console.get_level()));
-    
+    std::string tech_lib;
+#ifdef _WIN32
+    tech_lib = technology + "_technology.dll";  // or with full path
+#else
+    tech_lib = "/app/lib/lib"+ technology + "_technology.so";
+#endif
+
+    TechnologyLoader::load_technology(tech_lib, console);
+
     consumer = ConsumerFactory::create(technology, console);
     console.log_debug("[ConsumerApp] Created " + technology + " consumer");
 }

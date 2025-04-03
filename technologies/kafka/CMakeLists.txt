@@ -1,35 +1,39 @@
-add_library(kafka_technology STATIC)
+add_library(kafka_technology SHARED)
 
 target_sources(kafka_technology PRIVATE
     KafkaPublisher.cpp
     KafkaConsumer.cpp
+    KafkaRegistration.cpp
 )
 
+set(KAFKA_INCLUDE_DIR "")
+set(KAFKA_LIB_DIR "")
+
+# First, check vcpkg path on Windows
 if(WIN32)
-    # Use vcpkg paths on Windows
     set(KAFKA_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows-static/include")
     set(KAFKA_LIB_DIR "${CMAKE_SOURCE_DIR}/../vcpkg/installed/x64-windows-static/lib")
-    target_link_libraries(kafka_technology PRIVATE
-        core
-        factories
-        "${KAFKA_LIB_DIR}/rdkafka.lib"
-    )
 elseif(UNIX)
-    # Use system paths on Ubuntu/Docker
     set(KAFKA_INCLUDE_DIR "/usr/include")
     set(KAFKA_LIB_DIR "/usr/lib/x86_64-linux-gnu")
-    target_link_libraries(kafka_technology PRIVATE
-        core
-        factories
-        "${KAFKA_LIB_DIR}/librdkafka.a"
-    )
 endif()
 
+# Use find_library to locate required .lib or .so files
+find_library(RDKAFKA_LIBRARY NAMES rdkafka REQUIRED)
+find_library(LZ4_LIBRARY NAMES lz4 REQUIRED)
+
+# Add include dirs
 target_include_directories(kafka_technology PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${KAFKA_INCLUDE_DIR}
 )
 
-target_link_libraries(PublisherApp PRIVATE core factories kafka_technology ${KAFKA_LIB_DIR}/lz4.lib)
-target_link_libraries(ConsumerApp PRIVATE core factories kafka_technology)
+# Link the shared libraries
+target_link_libraries(kafka_technology PRIVATE
+    core-interfaces
+    factories
+    ${RDKAFKA_LIBRARY}
+    ${LZ4_LIBRARY}
+)
 
+set_target_properties(kafka_technology PROPERTIES OUTPUT_NAME "kafka_technology")

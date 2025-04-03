@@ -1,5 +1,6 @@
 #include "PublisherApp.hpp"
 #include "cstdlib"
+#include "TechnologyLoader.hpp"
 
 template<typename T>
 T from_string(const std::string& str, T default_value) {
@@ -159,6 +160,16 @@ void PublisherApp::load_from_env() {
 void PublisherApp::create_publisher() {
     std::string technology = std::getenv("TECHNOLOGY");
     console.log_debug("[PublisherApp] Creating publisher for technology " + technology + ", log_level: " + Logger::level_to_string(console.get_level()));
+    std::string tech_lib;
+#ifdef _WIN32
+    tech_lib = technology + "_technology.dll";  // or with full path
+#else
+    tech_lib = "/app/lib/lib"+ technology + "_technology.so";
+#endif
+
+    TechnologyLoader::load_technology(tech_lib, console);
+    console.log_debug("[PublisherApp] Factory state before calling 'create'");
+    PublisherFactory::debug_print_registry(console);
     
     publisher = PublisherFactory::create(technology, console);
     console.log_debug("[PublisherApp] Created " + technology + " publisher");
@@ -251,8 +262,6 @@ void PublisherApp::run_duration(){
 int main(int argc, char * argv[]) {
     std::ios::sync_with_stdio(false); // Disable stream buffering
     std::cout << "[PublisherApp] Start" << std::endl << std::flush;
-    extern int kafka_tu_alive_marker;
-    std::cout << "[PublisherApp] Kafka TU marker: " << kafka_tu_alive_marker << std::endl;
     try {
         Logger::LogLevel log_level = Logger::LogLevel::INFO;
         if (argc >= 2 && argv[1] != nullptr){

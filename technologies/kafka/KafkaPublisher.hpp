@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/interfaces/IPublisher.hpp"
+#include "IPublisher.hpp"
 #include <librdkafka/rdkafka.h>
 #include <string>
 #include <unordered_map>

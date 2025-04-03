@@ -1,20 +1,7 @@
 #include "KafkaConsumer.hpp"
-#include "../../core/factory/ConsumerFactory.hpp"
+#include "ConsumerFactory.hpp"
 #include <cstdlib>
 #include <cstring>
-
-
-namespace {
-    struct Register {
-        Register() {
-            ConsumerFactory::registerConsumer("kafka", [](Logger console) -> std::unique_ptr<IConsumer> {
-                return std::make_unique<KafkaConsumer>(console);
-            });
-        }
-    };
-
-    static Register reg;
-}
 
 
 KafkaConsumer::KafkaConsumer(const Logger& logger)

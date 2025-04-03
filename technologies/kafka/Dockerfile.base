@@ -2,15 +2,18 @@
 # Kafka Base Dockerfile
 FROM core_base
 
-# Install ZeroMQ-specific dependencies
+# Install Kafka-specific dependencies
 RUN apt-get update && apt-get install -y \
     librdkafka-dev \
+    liblz4-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
 RUN mkdir -p /app/technologies
 RUN mkdir -p /app/technologies/kafka
 COPY ./technologies/kafka /app/technologies/kafka
 
-# Build the ZeroMQ-specific library
-RUN cd /app/build && cmake .. &&  cmake --build . --clean-first
+# Build the kafka-specific library
+RUN cd /app/build && cmake .. && cmake --build .
+
+# Move shared lib into /app/lib
+RUN mkdir -p /app/lib && cp /app/build/technologies/kafka/libkafka_technology.so /app/lib/

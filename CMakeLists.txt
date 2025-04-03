@@ -20,21 +20,16 @@ endif()
 add_subdirectory(core)
 add_subdirectory(core/applications)
 
-# add as technologies are added (this is UGLY but whatever)
-if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/zeromq_p2p")
-message(STATUS "Including ZeroMQ P2P technology")
-add_subdirectory(technologies/zeromq_p2p)
-else()
-message(STATUS "Skipping ZeroMQ P2P technology (not found)")
-endif()
+# Maybe wrap these repeated if-blocks in a function/macro or table later
+foreach(TECH kafka zeromq_p2p)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/${TECH}")
+        message(STATUS "Including ${TECH} technology")
+        add_subdirectory("technologies/${TECH}")
+    else()
+        message(STATUS "Skipping ${TECH} technology (not found)")
+    endif()
+endforeach()
 
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/kafka")
-    message(STATUS "Including Kafka technology")
-    add_subdirectory(technologies/kafka)
-else()
-    message(STATUS "Skipping Kafka technology (not found)")
-endif()
 
 
 
