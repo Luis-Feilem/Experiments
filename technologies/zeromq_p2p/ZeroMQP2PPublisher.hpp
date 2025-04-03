@@ -1,7 +1,7 @@
 #ifndef ZEROMQP2P_PUBLISHER_HPP
 #define ZEROMQP2P_PUBLISHER_HPP
 
-#include "../../core/interfaces/IPublisher.hpp"
+#include "IPublisher.hpp"
 #include <zmq.hpp>
 #include <string>
 #include "Logger.hpp"

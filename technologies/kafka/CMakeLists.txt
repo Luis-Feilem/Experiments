@@ -2,7 +2,7 @@ add_library(kafka_technology SHARED)
 
 target_sources(kafka_technology PRIVATE
     KafkaPublisher.cpp
-    KafkaConsumer.cpp
+    KafkaConsumer.cpp   
     KafkaRegistration.cpp
 )
 

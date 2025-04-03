@@ -1,7 +1,7 @@
 #ifndef ZEROMQP2P_CONSUMER_HPP
 #define ZEROMQP2P_CONSUMER_HPP
 
-#include "../../core/interfaces/IConsumer.hpp"
+#include "IConsumer.hpp"
 #include <zmq.hpp>
 #include <string>
 #include <sstream>

@@ -14,3 +14,6 @@ COPY ./technologies/zeromq_p2p /app/technologies/zeromq_p2p
 
 # Build the ZeroMQ-specific library
 RUN cd /app/build && cmake .. &&  cmake --build . --clean-first
+
+# Move shared lib into /app/lib
+RUN mkdir -p /app/lib && cp /app/build/technologies/zeromq_p2p/libzeromq_p2p_technology.so /app/lib/

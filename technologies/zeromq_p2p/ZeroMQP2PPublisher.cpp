@@ -5,18 +5,6 @@
 #include <sstream>
 #include "PublisherFactory.hpp"
 
-namespace {
-    struct Register {
-        Register() {
-            PublisherFactory::registerPublisher("zeromq_p2p", [](Logger console) -> std::unique_ptr<IPublisher> {
-                return std::make_unique<ZeroMQP2PPublisher>(console);
-            });
-        }
-    };
-
-    static Register reg;
-}
-
 
 inline std::vector<char> serialize_payload_with_topic(const std::string& topic, const Payload& payload) {
     std::vector<char> buffer;

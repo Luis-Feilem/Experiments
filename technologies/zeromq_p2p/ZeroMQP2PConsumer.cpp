@@ -50,18 +50,6 @@ inline Payload deserialize_payload_with_topic(const void* data, size_t size, std
     return deserialize_payload(payload_data, payload_size);
 }
 
-namespace {
-    struct Register {
-        Register() {
-            ConsumerFactory::registerConsumer("zeromq_p2p", [](Logger console) -> std::unique_ptr<IConsumer> {
-                return std::make_unique<ZeroMQP2PConsumer>(console);
-            });
-        }
-    };
-
-    static Register reg;
-}
-
 ZeroMQP2PConsumer::ZeroMQP2PConsumer(const Logger& logger)
     try : IConsumer(logger), context(1), subscriber(context, ZMQ_SUB) {
         console.log_debug("[ZeroMQP2P Consumer] Constructor finished");
