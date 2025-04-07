@@ -5,7 +5,7 @@ from .technologies.zeromq_p2p_manager import ZeroMQP2PManager
 from .scenario_manager import ScenarioManager
 from .container_manager import ContainerManager
 from .metrics_collector import MetricsCollector
-# from .events_logger import ContainerEventsLogger
+from .events_logger import ContainerEventsLogger
 from .scenario_config_manager import ScenarioConfigManager, EXCLUSIVE_MSG, EXCLUSIVE_TIME
 
 TECHNOLOGIES_DIR = "technologies"
@@ -79,8 +79,9 @@ class BenchmarkManager:
             print("[BM] All containers running...")
             self.cm.wait_for_all()
             metrics.stop()
-            # events_logger = ContainerEventsLogger(tech_name, scenario_name)
-            # events_logger.collect_logs()
+            events_logger = ContainerEventsLogger(tech_name, scenario_name)
+            events_logger.collect_logs()
+            events_logger.write_logs()
 
         finally:
             print("[BM] Cleaning up...")
