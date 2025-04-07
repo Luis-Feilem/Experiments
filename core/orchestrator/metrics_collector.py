@@ -6,9 +6,9 @@ import csv
 from datetime import datetime
 
 class MetricsCollector:
-    def __init__(self, tech_name, scenario_name, interval=2.0):
+    def __init__(self, tech_name, scenario_name, scenario_config, interval=2.0):
         self.tech_name = tech_name
-        self.logs_dir = os.path.join("logs", tech_name)
+        self.logs_dir = os.path.join("logs", scenario_config, tech_name)
         self.log_file = os.path.join(self.logs_dir, f"{scenario_name}_{interval}s.csv")
         self.scenario_name = scenario_name
         self.interval = interval if interval > 2.0 else 2.0

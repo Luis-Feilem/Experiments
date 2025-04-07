@@ -4,10 +4,10 @@ import json
 import os
 
 class ContainerEventsLogger:
-    def __init__(self, tech_name, scenario_name, separator = ';'):
+    def __init__(self, tech_name, scenario_name, scenario_config, separator = ';'):
         self.tech_name = tech_name
         self.scenario_name = scenario_name
-        self.log_file = os.path.join("logs", tech_name, f"{scenario_name}_events.csv")
+        self.log_file = os.path.join("logs", scenario_config, tech_name, f"{scenario_name}_events.csv")
         self.client = docker.from_env()
         self.fieldnames = [
             "timestamp", 

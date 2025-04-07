@@ -15,16 +15,22 @@ class BenchmarkManager:
     
     def __init__(self, config_path, metrics_interval=2.0):
         self.interval = metrics_interval
-        self.tm = None
         with open(config_path, 'r', encoding='utf-8') as file:
             self.config = json.load(file)
-        self.scenario_config_file = os.path.join(SCENARIOS_DIR, self.config['scenario_batch'])
-        print(f"[BM] Scenario config file: {self.scenario_config_file}")
-        self.scm = ScenarioConfigManager(self.scenario_config_file)
+        self.scenario_config_files = self.config['scenario_batch']
+        self.scenario_batch_name = ""
+        self.scm = None
         self.cm = ContainerManager()
+        self.tm = None
 
     def run(self, mode = None):
-        print(f"[BM] Using scenario_config from {self.scenario_config_file}")
+        for scenario_batch in self.config['scenario_batch']:
+            self.run_config(scenario_batch, mode)
+    
+    def run_config(self, scenario_batch, mode = None):
+        self.scm = ScenarioConfigManager(os.path.join(SCENARIOS_DIR, scenario_batch))
+        self.scenario_batch_name = scenario_batch.split("json")[0]
+        print(f"[BM] Using scenario_config from {self.scenario_batch_name}")
         technologies = self.config['technologies']
         for tech_name in technologies:
             if tech_name == "kafka":
@@ -48,7 +54,7 @@ class BenchmarkManager:
 
     def execute_experiment(self, tech_name, scenario_config, mode = None):
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)
-        metrics = MetricsCollector(tech_name, scenario_name, interval=self.interval)
+        metrics = MetricsCollector(tech_name, scenario_name, self.scenario_batch_name, interval=self.interval)
         try:
             print(f"[BM] Using technology {tech_name} to run scenario {scenario_name} ...")
             print(f"[BM] Starting and pausing all containers in mode {mode}...")
@@ -79,7 +85,7 @@ class BenchmarkManager:
             print("[BM] All containers running...")
             self.cm.wait_for_all()
             metrics.stop()
-            events_logger = ContainerEventsLogger(tech_name, scenario_name)
+            events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
             events_logger.collect_logs()
             events_logger.write_logs()
 
