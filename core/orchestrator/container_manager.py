@@ -59,11 +59,11 @@ class ContainerManager:
         print(f"Starting publisher {pub_id} on topics {topics} using {tech_name}")
         try:
             container_name = f"{tech_name}-{pub_id}"
-            # publisher_endpoint = "0.0.0.0" if publisher_endpoint == container_name else publisher_endpoint
+            publisher_endpoint = "0.0.0.0" if "p2p" in container_name else "benchmark_" + tech_name + "_broker"
             environment={
                 "TECHNOLOGY": tech_name,
                 "CONTAINER_ID": pub_id,
-                # "PUBLISHER_ENDPOINT": publisher_endpoint,
+                "PUBLISHER_ENDPOINT": publisher_endpoint,
                 "TOPICS": ','.join(topics),
                 "MESSAGES": n_messages,
                 "DURATION": duration,

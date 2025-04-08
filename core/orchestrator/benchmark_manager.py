@@ -1,7 +1,6 @@
 import os
 import json
-from .technologies.kafka_manager import KafkaManager
-from .technologies.zeromq_p2p_manager import ZeroMQP2PManager
+from .technology_manager import TechnologyManager, get_technology_manager
 from .scenario_manager import ScenarioManager
 from .container_manager import ContainerManager
 from .metrics_collector import MetricsCollector
@@ -33,14 +32,7 @@ class BenchmarkManager:
         print(f"[BM] Using scenario_config from {self.scenario_batch_name}")
         technologies = self.config['technologies']
         for tech_name in technologies:
-            if tech_name == "kafka":
-                self.tm = KafkaManager(os.path.join(TECHNOLOGIES_DIR,tech_name))
-            elif tech_name == "zeromq_p2p":
-                self.tm = ZeroMQP2PManager(os.path.join(TECHNOLOGIES_DIR, tech_name))
-            else:
-                print(f"[BM] Unknown technology: {tech_name}")
-                return
-            print(f"[BM] Validating technology {tech_name}...")
+            self.tm = get_technology_manager(tech_name)(os.path.join(TECHNOLOGIES_DIR, tech_name))
             if not self.tm.validate_technology():
                 raise ValueError(f"Invalid technology: {tech_name}")
             print(f"[BM] Setting up {tech_name} extra resources...")
@@ -85,13 +77,13 @@ class BenchmarkManager:
             print("[BM] All containers running...")
             self.cm.wait_for_all()
             metrics.stop()
-            events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
-            events_logger.collect_logs()
-            events_logger.write_logs()
+            # events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
+            # events_logger.collect_logs()
+            # events_logger.write_logs()
 
         finally:
             print("[BM] Cleaning up...")
             self.cm.stop_all()
-            self.cm.remove_all()
-            self.tm.reset_tech()
+            # self.cm.remove_all()
+            # self.tm.reset_tech()
             print(f"[BM] Producer and Consumer containers removed, {self.tm.tech_name} reset completed")

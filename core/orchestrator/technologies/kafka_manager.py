@@ -4,13 +4,14 @@ import time
 from confluent_kafka.admin import AdminClient, NewTopic
 import concurrent.futures
 
-from ..technology_manager import TechnologyManager
+from ..technology_manager import TechnologyManager, register_technology
 
 KAFKA_IMAGE = "bitnami/kafka:latest"
 KAFKA_CONTAINER_NAME = "benchmark_kafka_broker"
 KAFKA_PORT = 9092
 CONTROLLER_PORT = 9093
 
+@register_technology("kafka")
 class KafkaManager(TechnologyManager):
     
     def __init__(self, tech_path, network_name = "benchmark_network", broker_host = KAFKA_CONTAINER_NAME, broker_port = KAFKA_PORT, controller_port = CONTROLLER_PORT):
