@@ -2,45 +2,45 @@
     "producerAssignmentStrategy": ["round-robin"],
     "consumerAssignmentStrategy": ["shared"],
     "common":{
-        "numProducers": {
+        "numProducersPerTopic": {
             "lower": 1,
-            "upper": 2,
+            "upper": 1,
             "step": 1,
             "step_operator": "+"
         },
         "numConsumers": {
-            "lower": 1,
+            "lower": 2,
             "upper": 2,
             "step": 1,
             "step_operator": "+"
         },
         "numTopics": {
-            "lower": 1,
-            "upper": 2,
+            "lower": 4,
+            "upper": 4,
             "step": 1,
             "step_operator": "+"
         },
         "parallelSubscriptionsPerTopic":{
             "lower": 1,
-            "upper": 2,
+            "upper": 1,
             "step": 1,
             "step_operator": "+"
         },
         "messageSizeBytes":{
             "lower": 64,
-            "upper": 128,
+            "upper": 64,
             "step": 2,
             "step_operator": "*"
         },
-        "producerRatePerMicroSecond":{
-            "lower": 5000000,
-            "upper": 5000000,
-            "step": 2,
-            "step_operator": "*"
+        "producerWaitInMicroSeconds":{
+            "lower": 10,
+            "upper": 10,
+            "step": 250000,
+            "step_operator": "+"
         },
         "backlogSizeMessages":{
             "lower": 0,
-            "upper": 10,
+            "upper": 0,
             "step": 10,
             "step_operator": "+"
         }
@@ -48,39 +48,39 @@
     "exclusive": {
         "testDurationS": {
             "lower": 10,
-            "upper": 60,
-            "step": 6,
-            "step_operator": "*"
+            "upper": 10,
+            "step": 5,
+            "step_operator": "+"
         },
         "numberOfMessages":{
-            "lower": 10,
+            "lower": 1000,
             "upper": 1000,
-            "step": 100,
-            "step_operator": "*"
+            "step": 1,
+            "step_operator": "+"
         }
     },
     "network": {
         "bandwidthMbps": {
             "lower": 1000,
-            "upper": 10000,
+            "upper": 1000,
             "step": 10,
             "step_operator": "*"
         },
         "latencyMs":{
             "lower": 0,
-            "upper": 50,
+            "upper": 0,
             "step": 50,
             "step_operator": "+"
         },
         "packetLossPerc":{
             "lower": 0,
-            "upper": 10,
+            "upper": 0,
             "step": 10,
             "step_operator": "+"
         },
         "jitterMs":{
             "lower": 0,
-            "upper": 100,
+            "upper": 0,
             "step": 100,
             "step_operator": "+"
         }
