@@ -2,15 +2,13 @@
 #include "./KafkaPublisher.hpp"
 #include "ConsumerFactory.hpp"
 #include "./KafkaConsumer.hpp"
-#include "Logger.hpp"
 
 extern "C" void register_technology(Logger logger) {
     PublisherFactory::registerPublisher("kafka", [](Logger logger) -> std::unique_ptr<IPublisher> {
         logger.log_info("[Kafka Registration] Registering publisher in factory");
         return std::make_unique<KafkaPublisher>(logger);
     });
-    ConsumerFactory::registerConsumer("kafka", [](Logger logger) -> std::unique_ptr<IConsumer> {
-        logger.log_info("[Kafka Registration] Registering consumer in factory");
+    ConsumerFactory::registerConsumer("kafka", [](const Logger& logger) -> std::unique_ptr<IConsumer> {
         return std::make_unique<KafkaConsumer>(logger);
     });
     logger.log_debug("[Kafka Registration] Registered creators in factories");

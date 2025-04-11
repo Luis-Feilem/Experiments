@@ -3,6 +3,10 @@
 #include <cstdlib>
 #include <cstring>
 
+static void kafka_log_callback(const rd_kafka_t* rk, int level,
+    const char* fac, const char* buf) {
+    std::cerr << "[librdkafka][" << fac << "] " << buf << std::endl;
+}
 
 KafkaPublisher::KafkaPublisher(const Logger& logger)
     try : IPublisher(logger), producer_(nullptr), conf_(nullptr) {
@@ -12,42 +16,52 @@ KafkaPublisher::KafkaPublisher(const Logger& logger)
 }
 
 KafkaPublisher::~KafkaPublisher() {
-    console.log_debug("Cleaning up Kafka topic handles...");
+    console.log_debug("[Kafka Publisher] Cleaning up Kafka topic handles...");
 
     for (auto& [topic, handle] : topic_handles_) {
-        console.log_debug("Destroying topic handle for: " + topic);
+        console.log_debug("[Kafka Publisher] Destroying topic handle for: " + topic);
         rd_kafka_topic_destroy(handle);
+        console.log_debug("[Kafka Publisher] Topic handle for '" + topic + "' has been destroyed");
     }
+    console.log_debug("[Kafka Publisher] Destroyed topic handles");
     topic_handles_.clear();
 
     if (producer_) {
+        console.log_debug("[Kafka Publisher] Flushing");
         rd_kafka_flush(producer_, 5000);  // Wait for delivery
-        rd_kafka_destroy(producer_);
+        console.log_debug("[Kafka Publisher] Destroying");
+        int remaining = rd_kafka_wait_destroyed(5000);
+        if (remaining != 0) {
+            console.log_error("[Kafka Publisher] Kafka still has " + std::to_string(remaining) + " references after destroy.");
+        } else {
+            console.log_debug("[Kafka Publisher] Kafka destroyed cleanly.");
+        }
     }
-    if (conf_) {
-        rd_kafka_conf_destroy(conf_);
-    }
+    console.log_debug("[Kafka Publisher] Kafka destructor finished.");
 }
 
 void KafkaPublisher::initialize() {
     const char* vendpoint = std::getenv("PUBLISHER_ENDPOINT");
-    broker_ = vendpoint ? std::string(vendpoint) : "localhost:9092";
-    console.log_info("[KafkaPublisher] Using broker: " + broker_);
+    broker_ = vendpoint ? std::string(vendpoint) + ":9092" : "localhost:9092";
+    console.log_info("[Kafka Publisher] Using broker: " + broker_);
 
     char errstr[512];
-
     conf_ = rd_kafka_conf_new();
+
+    rd_kafka_conf_set_log_cb(conf_, kafka_log_callback);
+
+    if (rd_kafka_conf_set(conf_, "bootstrap.servers", broker_.c_str(), errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
+        throw std::runtime_error("Failed to set bootstrap.servers: " + std::string(errstr));
+    }
 
     if (!(producer_ = rd_kafka_new(RD_KAFKA_PRODUCER, conf_, errstr, sizeof(errstr)))) {
         throw std::runtime_error("Failed to create producer: " + std::string(errstr));
     }
+    conf_ = nullptr;
 
-    if (rd_kafka_brokers_add(producer_, broker_.c_str()) == 0) {
-        throw std::runtime_error("No valid brokers added: " + broker_);
-    }
-
-    console.log_info("KafkaProducer initialized successfully.");
+    console.log_info("[Kafka Publisher] Publisher initialized successfully.");
 }
+
 
 inline std::string serialize_payload(const Payload& message){
     std::string serialized;

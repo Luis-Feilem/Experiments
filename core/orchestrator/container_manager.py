@@ -102,10 +102,16 @@ class ContainerManager:
             environment = {
                 "TECHNOLOGY": tech_name,
                 "CONTAINER_ID": con_id,
-                "CONSUMER_ENDPOINT": ','.join(publishers_list),
                 "TOPICS": ','.join(topics_list),
                 "BACKLOG_SIZE": backlog_size
             }
+            if "p2p" in tech_name:
+                print(f"[CM] Using p2p broker {publishers_list}")
+                environment["CONSUMER_ENDPOINT"] = ','.join(publishers_list)
+            else:
+                print(f"[CM] Using tech-specific broker benchmark_" + tech_name + "_broker")
+                environment["CONSUMER_ENDPOINT"] = "benchmark_" + tech_name + "_broker"
+                
             container = self.client.containers.run(
                 name=f"{tech_name}-{con_id}",
                 image=f"{tech_name}_consumer",

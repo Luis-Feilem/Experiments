@@ -5,7 +5,7 @@
 
 class ConsumerFactory {
 public:
-    using CreateFunc = std::unique_ptr<IConsumer>(*)(Logger console);
+    using CreateFunc = std::unique_ptr<IConsumer>(*)(const Logger&);
 
     static void registerConsumer(const std::string& name, CreateFunc func);
 

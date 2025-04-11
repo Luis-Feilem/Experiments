@@ -20,11 +20,9 @@ protected:
     std::unique_ptr<IConsumer> consumer;
 
 public:
-    ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO)  {
-        log_level = log_level;
-        console = Logger(log_level);
-    }
-    ~ConsumerApp() = default;
+    ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO)  :
+        log_level(log_level), console(Logger(log_level)){};
+    ~ConsumerApp();
 
     // Factory call to Create Consumer
     void create_consumer();

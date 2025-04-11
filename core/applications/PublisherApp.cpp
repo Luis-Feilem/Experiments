@@ -182,10 +182,14 @@ void PublisherApp::publish_on_topic(std::string topic){
 }
 
 void PublisherApp::publish_on_all_topics(){
-    std::istringstream ss(topics);
-    std::string topic;
-    while (std::getline(ss, topic, ',')) {
-        publish_on_topic(topic);
+    try {
+        std::istringstream ss(topics);
+        std::string topic;
+        while (std::getline(ss, topic, ',')) {
+            publish_on_topic(topic);
+        }
+    } catch (const std::exception& e){
+        console.log_error("[Publisher App] Exception during publish: " + std::string(e.what()));
     }
 }
 
@@ -209,14 +213,16 @@ void PublisherApp::run() {
     // wait for consumer to start and connect, and to synchronize with metrics gathering
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-    console.log_debug("[PublisherApp] Initialized publisher. It will send " + std::to_string(message_count) 
-        + " messages every " + std::to_string(update_every) + " us"
-    );
-
     if (message_count > 0) {
+        console.log_debug("[PublisherApp] Initialized publisher. It will send a total of " + std::to_string(message_count) 
+            + " messages, one every " + std::to_string(update_every) + " us"
+        );
         run_messages();
     }
     else if (duration > 0) {
+        console.log_debug("[PublisherApp] Initialized publisher. It will send messages for " + std::to_string(duration) 
+            + " seconds, one every " + std::to_string(update_every) + " us"
+        );
         run_duration();
     }
     else{

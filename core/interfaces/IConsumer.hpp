@@ -26,6 +26,13 @@ public:
 
     // Receives a message (blocking or non-blocking depending on implementation)
     virtual Payload receive_message() = 0;
+
+    int get_subscribed_streams_size() const {
+        return static_cast<int>(subscribed_streams.size());
+    }
+    int get_terminated_streams_size() const {
+        return static_cast<int>(terminated_streams.size());
+    }
 };
 
 #endif // ICONSUMER_HPP

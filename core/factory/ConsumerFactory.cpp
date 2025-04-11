@@ -18,7 +18,7 @@ std::unique_ptr<IConsumer> ConsumerFactory::create(const std::string& name, Logg
 }
 
 void ConsumerFactory::debug_print_registry(Logger& logger) {
-    logger.log_debug("[ConsumerFactory] Registered publisher types:");
+    logger.log_debug("[ConsumerFactory] Registered consumer types:");
     for (const auto& entry : getRegistry()) {
         logger.log_debug(" - " + entry.first);
     }
