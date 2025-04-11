@@ -48,6 +48,7 @@ __pycache__/
 # Ignore CSV and benchmarking results
 results/*.csv
 logs/
+test_scenarios/
 
 # Ignore environment-specific files
 .env
