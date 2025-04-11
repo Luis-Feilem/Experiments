@@ -53,3 +53,6 @@ test_scenarios/
 # Ignore environment-specific files
 .env
 
+benchmark_scenarios.json
+test_scenarios/complete_tests.json
+test_scenarios/quick_test.json
