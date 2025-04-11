@@ -23,9 +23,9 @@ class TechnologyManager (ABC):
         pass
             
     def validate_technology(self):
-        print(f"Inspecting files in {self.tech_path}...")
+        print(f"[TM] Inspecting files in {self.tech_path}...")
         for f in [self.base_dockerfile(), self.publisher_dockerfile(), self.consumer_dockerfile()]:
-            print(f"Validating {f}...")
+            print(f"[TM] Validating {f}...")
             if not os.path.exists(f):
                 raise ValueError(f"Missing {f} in {self.tech_path}")
         return True

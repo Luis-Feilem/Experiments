@@ -21,7 +21,7 @@ class ContainerEventsLogger:
     def collect_logs(self):
         self.logs = [] # ensure idempotency
         containers = self.client.containers.list(all=True, filters={"name": f"{self.tech_name}-*"})
-        print(f"Collecting logs from {len(containers)} containers...")
+        print(f"[EL] Collecting logs from {len(containers)} containers...")
         for container in containers:
             try:
                 logs = container.logs(timestamps=True).decode("utf-8").strip().split("\n")
@@ -30,13 +30,13 @@ class ContainerEventsLogger:
                     if "[INFO]" in log:
                         self.logs.append(self._parse_log(log, container.name))
             except Exception as e:
-                print(f"Error collecting logs from container {container.id}: {e}")
+                print(f"[EL] Error collecting logs from container {container.id}: {e}")
         
     def write_logs(self):
         with open(self.log_file, mode='w', encoding='utf-8') as file:
             file.write(self.separator.join(self.fieldnames) + "\n")
             file.writelines(self.logs)
-        print(f"Logs saved to {self.log_file}")
+        print(f"[EL] Logs saved to {self.log_file}")
 
     def _parse_log(self, log, container_name):
         row = ""

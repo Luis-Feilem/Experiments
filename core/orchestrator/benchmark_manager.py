@@ -35,8 +35,6 @@ class BenchmarkManager:
             self.tm = get_technology_manager(tech_name)(os.path.join(TECHNOLOGIES_DIR, tech_name))
             if not self.tm.validate_technology():
                 raise ValueError(f"Invalid technology: {tech_name}")
-            print(f"[BM] Setting up {tech_name} extra resources...")
-            self.tm.setup_tech()
             print(f"[BM] Running experiments for technology {tech_name} in mode {mode}...")
             for scenario_messages in self.scm.iter_valid_combinations(EXCLUSIVE_MSG):
                 self.execute_experiment(tech_name, scenario_messages, mode)
@@ -45,6 +43,8 @@ class BenchmarkManager:
             self.tm = None
 
     def execute_experiment(self, tech_name, scenario_config, mode = None):
+        print(f"[BM] Setting up {tech_name} extra resources...")
+        self.tm.setup_tech()
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)
         metrics = MetricsCollector(tech_name, scenario_name, self.scenario_batch_name, interval=self.interval)
         try:
@@ -77,13 +77,14 @@ class BenchmarkManager:
             print("[BM] All containers running...")
             self.cm.wait_for_all()
             metrics.stop()
-            # events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
-            # events_logger.collect_logs()
-            # events_logger.write_logs()
+            events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
+            events_logger.collect_logs()
+            events_logger.write_logs()
 
         finally:
             print("[BM] Cleaning up...")
             self.cm.stop_all()
-            # self.cm.remove_all()
-            # self.tm.reset_tech()
-            print(f"[BM] Producer and Consumer containers removed, {self.tm.tech_name} reset completed")
+            self.cm.remove_all()
+            print(f"[BM] Producer and Consumer containers removed")
+            self.tm.teardown_tech()
+            print(f"[BM] Teardown completed for {tech_name}")

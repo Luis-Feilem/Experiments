@@ -5,7 +5,6 @@
 
 extern "C" void register_technology(Logger logger) {
     PublisherFactory::registerPublisher("kafka", [](Logger logger) -> std::unique_ptr<IPublisher> {
-        logger.log_info("[Kafka Registration] Registering publisher in factory");
         return std::make_unique<KafkaPublisher>(logger);
     });
     ConsumerFactory::registerConsumer("kafka", [](const Logger& logger) -> std::unique_ptr<IConsumer> {

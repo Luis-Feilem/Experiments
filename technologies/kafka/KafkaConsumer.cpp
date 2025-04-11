@@ -130,27 +130,27 @@ inline Payload deserialize_payload(const std::string& data) {
 
     // Step 1: Extract label length
     if (data.size() < offset + sizeof(uint32_t))
-        throw std::runtime_error("Invalid payload: insufficient data for label length");
+        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for label length");
     uint32_t label_len;
     std::memcpy(&label_len, data.data() + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
     // Step 2: Extract label
     if (data.size() < offset + label_len)
-        throw std::runtime_error("Invalid payload: insufficient data for label string");
+        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for label string");
     result.label = std::string(data.data() + offset, label_len);
     offset += label_len;
 
     // Step 3: Extract number of values
     if (data.size() < offset + sizeof(uint32_t))
-        throw std::runtime_error("Invalid payload: insufficient data for value count");
+        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for value count");
     uint32_t num_vals;
     std::memcpy(&num_vals, data.data() + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
     // Step 4: Extract values
     if (data.size() < offset + num_vals * sizeof(double))
-        throw std::runtime_error("Invalid payload: insufficient data for values");
+        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for values");
     result.values.reserve(num_vals);
     for (uint32_t i = 0; i < num_vals; ++i) {
         double v;
@@ -177,7 +177,7 @@ Payload KafkaConsumer::receive_message() {
     } 
     else if (msg->len > 0) {
         std::string topic = rd_kafka_topic_name(msg->rkt);
-        console.log_debug("[Kafka Consumer] Received message on topic '" + topic + "' with " + std::to_string(msg->len) + " bytes");
+        console.log_info("[Kafka Consumer] Received message on topic '" + topic + "' with " + std::to_string(msg->len) + " bytes");
         // payload = deserialize_payload(std::string(static_cast<const char*>(msg->payload), msg->len));
         try {
             // COPY from message buffer BEFORE destroying

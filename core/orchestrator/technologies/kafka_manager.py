@@ -23,6 +23,15 @@ class KafkaManager(TechnologyManager):
         self.controller_port = controller_port
         
     def setup_tech(self):
+        # existing = None
+        # try:
+        #     existing = self.client.containers.get(self.broker_host)
+        # except docker.errors.NotFound:
+        #     pass  # Nothing to stop
+        # if existing is not None:
+        #     self.container = existing
+        #     self.reset_broker_state()
+        # else:
         self.start_broker()
     
     def reset_tech(self):
@@ -32,17 +41,8 @@ class KafkaManager(TechnologyManager):
         self.stop_broker()
 
     def start_broker(self):
-        # Clean up if already running
-        try:
-            existing = self.client.containers.get(self.broker_host)
-            print("Stopping existing Kafka broker container...")
-            self.container = existing
-            self.reset_broker_state()
-        except docker.errors.NotFound:
-            pass  # Nothing to stop
-
+        print("[KM] Starting new Kafka broker...")
         cluster_id = uuid.uuid4().hex
-
         env_vars = {
             "KAFKA_CFG_PROCESS_ROLES": "broker,controller",
             "KAFKA_CFG_NODE_ID": "1",
@@ -54,7 +54,7 @@ class KafkaManager(TechnologyManager):
             "ALLOW_PLAINTEXT_LISTENER": "yes"
         }
 
-        print("Starting Kafka broker container...")
+        print("[KM] Starting Kafka broker container...")
 
         self.container = self.client.containers.run(
             image=KAFKA_IMAGE,
@@ -71,19 +71,19 @@ class KafkaManager(TechnologyManager):
 
         self._wait_for_readiness()
 
-        print(f"Kafka broker is up and running at localhost:{self.broker_port}")
+        print(f"[KM] Kafka broker is up and running at localhost:{self.broker_port}")
         return f"localhost:{self.broker_port}"
 
     def stop_broker(self):
         try:
             existing = self.client.containers.get(self.broker_host)
-            print("Stopping existing Kafka broker container...")
+            print("[KM] Stopping existing Kafka broker container...")
             existing.stop()
         except docker.errors.NotFound:
             pass  # Nothing to stop
 
     def _wait_for_readiness(self, timeout=30):
-        print("Waiting for Kafka broker to become ready...")
+        print("[KM] Waiting for Kafka broker to become ready...")
         start = time.time()
         while time.time() - start < timeout:
             logs = self.container.logs().decode("utf-8")
@@ -94,9 +94,9 @@ class KafkaManager(TechnologyManager):
 
     def reset_broker_state(self):
         """Delete all non-internal topics from the broker."""
-        print("Resetting Kafka broker state...")
+        print("[KM] Resetting Kafka broker state...")
 
-        admin_conf = {'bootstrap.servers': f"{self.broker_host}:{self.broker_port}"}
+        admin_conf = {'bootstrap.servers': "localhost:9092"}
         admin_client = AdminClient(admin_conf)
 
         # Fetch list of topics

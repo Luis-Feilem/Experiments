@@ -10,8 +10,8 @@ if __name__ == "__main__":
         mode = sys.argv[1]
     i = 0
     while i < len(sys.argv):
-        print(f"[BenchmarkManager] Argument {i}: {sys.argv[i]}")
+        print(f"[EE] Argument {i}: {sys.argv[i]}")
         i += 1
-    print(f"[BenchmarkManager] Executing benchmark in mode {mode}")
+    print(f"[EE] Executing benchmark in mode {mode}")
     benchmark_manager.run(mode=mode)
     

@@ -48,7 +48,7 @@ class ContainerManager:
         def wrapper(self, container_id, *args, **kwargs):
             container = next((c for c in self.containers if c.id == container_id), None)
             if container is None:
-                raise ValueError(f"Container ID '{container_id}' not found")
+                raise ValueError(f"[CM] Container ID '{container_id}' not found")
             return method(self, container, *args, **kwargs)
         return wrapper
         
@@ -56,7 +56,7 @@ class ContainerManager:
     def start_publisher(self, tech_name, pub_id, topics, pub_rate, n_messages=None, duration=None, paused = True, mode = None):
         if (n_messages is None and duration is None) or (n_messages is not None and duration is not None):
             raise ValueError("One and only one of 'n_messages' and 'duration' must be passed.")
-        print(f"Starting publisher {pub_id} on topics {topics} using {tech_name}")
+        print(f"[CM] Starting publisher {pub_id} on topics {topics} using {tech_name}")
         try:
             container_name = f"{tech_name}-{pub_id}"
             publisher_endpoint = "0.0.0.0" if "p2p" in container_name else "benchmark_" + tech_name + "_broker"
@@ -72,8 +72,8 @@ class ContainerManager:
                 "PAYLOAD_MAX_SIZE": 100, # read msg size from config
                 "PAYLOAD_SAMPLES": 5, # can be hardcoded for now?
             }
-            print(f"Environment: {environment}")
-            print(f"Starting container from image {tech_name}_publisher in mode {mode}")
+            print(f"[CM] Environment: {environment}")
+            print(f"[CM] Starting container from image {tech_name}_publisher in mode {mode}")
             container = self.client.containers.run(
                 name=container_name,
                 image=f"{tech_name}_publisher",
@@ -85,9 +85,9 @@ class ContainerManager:
             if paused:
                 container.pause()
             self.containers.append(container)
-            print(f"Created container {container.name}")
+            print(f"[CM] Created container {container.name}")
         except docker.errors.DockerException as e:
-            raise ValueError(f"Failed to start publisher {pub_id}") from e
+            raise ValueError(f"[CM] Failed to start publisher {pub_id}") from e
         for topic in topics:
             if not topic in self.topics_map:
                 self.topics_map[topic] = []
@@ -96,7 +96,7 @@ class ContainerManager:
     
     # @return_container_ids
     def start_consumer(self, tech_name, con_id, topics, backlog_size = None, paused = True, mode = None):
-        print(f"Starting consumer {con_id} subscribed to topics {topics} with backlog_size {backlog_size} using {tech_name}")
+        print(f"[CM] Starting consumer {con_id} subscribed to topics {topics} with backlog_size {backlog_size} using {tech_name}")
         try:
             topics_list, publishers_list = self.topics_and_publishers_lists(topics)
             environment = {
@@ -123,36 +123,36 @@ class ContainerManager:
             if paused:
                 container.pause()
             self.containers.append(container)
-            print(f"Created container {container.name}")
+            print(f"[CM] Created container {container.name}")
         except docker.errors.DockerException as e:
-            raise ValueError(f"Failed to start consumer {con_id}") from e
+            raise ValueError(f"[CM] Failed to start consumer {con_id}") from e
         return container.name
 
     def wake_all(self):
-        print("Waking all containers...")
+        print("[CM] Waking all containers...")
         for container in self.containers:
             container.unpause()
             
     @validate_container
     def wake_container(self, container_id):
-        print(f"Waking container {container_id}...")
+        print(f"[CM] Waking container {container_id}...")
         container = self.client.containers.get(container_id)
         container.unpause()
 
     def stop_all(self):
-        print("Stopping all containers...")
+        print("[CM] Stopping all containers...")
         for container in self.containers:
             container.stop()
             
     @validate_container
     def stop_container(self, container_id):
-        print(f"Stopping container {container_id}...")
+        print(f"[CM] Stopping container {container_id}...")
         container = self.client.containers.get(container_id)
         container.stop()
         
     @return_container_ids
     def remove_all(self):
-        print("Removing all containers...")
+        print("[CM] Removing all containers...")
         for container in self.containers:
             container.remove()
         self.containers = []
@@ -160,19 +160,19 @@ class ContainerManager:
     @validate_container
     @return_container_ids
     def remove_container(self, container_id):
-        print(f"Removing container {container_id}...")
+        print(f"[CM] Removing container {container_id}...")
         container = self.client.containers.get(container_id)
         container.remove()
         self.containers = [c for c in self.containers if c.id != container_id]
         
     def wait_for_all(self):
-        print("Waiting for all containers to finish...")
+        print("[CM] Waiting for all containers to finish...")
         for container in self.containers:
             container.wait()
     
     @validate_container
     def wait_for_container(self, container_id):
-        print(f"Waiting for container {container_id} to finish...")
+        print(f"[CM] Waiting for container {container_id} to finish...")
         container = self.client.containers.get(container_id)
         container.wait()
     

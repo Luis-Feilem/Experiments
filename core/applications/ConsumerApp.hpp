@@ -22,7 +22,7 @@ protected:
 public:
     ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO)  :
         log_level(log_level), console(Logger(log_level)){};
-    ~ConsumerApp();
+    ~ConsumerApp() = default;
 
     // Factory call to Create Consumer
     void create_consumer();

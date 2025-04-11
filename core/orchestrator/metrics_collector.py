@@ -47,7 +47,7 @@ class MetricsCollector:
 
     def _collect_metrics(self):
         num_cpus = self.client.info().get("NCPU", 1)
-        print(f"Starting metrics collection for '{self.tech_name}'...")
+        print(f"[MC] Starting metrics collection for '{self.tech_name}'...")
         # Open the file once and keep appending to avoid file locks
         with open(self.log_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=self.fieldnames)
@@ -88,21 +88,20 @@ class MetricsCollector:
                             "disk_write": disk_write
                         })
                 except TypeError:
-                    print(f"Containers list empty at {timestamp}")
+                    print(f"[MC] Containers list empty at {timestamp}")
                     self.running = False
                 except Exception as e:
-                    print(f"Error while collecting metrics: {e}")
+                    print(f"[MC] Error while collecting metrics: {e}")
                     self.running = False
                 
-                print(f"Metrics collected at {timestamp}, waiting for {self.interval}s...")
+                print(f"[MC] Metrics collected at {timestamp}, waiting for {self.interval}s...")
                 time.sleep(self.interval)
-            # try
 
     def stop(self):
         """Stop the background thread and save metrics to file."""
         if self.running:
-            print("Stopping metrics collection...")
+            print("[MC] Stopping metrics collection...")
             self.running = False
-            self.thread.join()
-            print(f"Metrics saved to {self.log_file}")
+        self.thread.join()
+        print(f"[MC] Metrics saved to {self.log_file}")
 
