@@ -10,6 +10,7 @@ public:
     enum class LogLevel {
         DEBUG,
         INFO,
+        STUDY,
         ERROR
     };
 
@@ -26,6 +27,7 @@ public:
     // Log functions
     void log_debug(const std::string& message);
     void log_info(const std::string& message);
+    void log_study(const std::string& message);
     void log_error(const std::string& message);
 
     // Helper function to convert LogLevel to string

@@ -85,6 +85,6 @@ class BenchmarkManager:
             print("[BM] Cleaning up...")
             self.cm.stop_all()
             self.cm.remove_all()
-            print(f"[BM] Producer and Consumer containers removed")
+            print("[BM] Producer and Consumer containers removed")
             self.tm.teardown_tech()
             print(f"[BM] Teardown completed for {tech_name}")

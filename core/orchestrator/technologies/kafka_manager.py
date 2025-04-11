@@ -78,7 +78,8 @@ class KafkaManager(TechnologyManager):
         try:
             existing = self.client.containers.get(self.broker_host)
             print("[KM] Stopping existing Kafka broker container...")
-            existing.stop()
+            # existing.stop()
+            existing.remove(force=True)
         except docker.errors.NotFound:
             pass  # Nothing to stop
 

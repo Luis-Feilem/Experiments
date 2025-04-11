@@ -6,4 +6,4 @@ WORKDIR /app/build/core/applications
 
 # Run the consumer app
 ENTRYPOINT ["./PublisherApp"]
-CMD [ "INFO", "DEBUG", "ERROR" ]
+CMD [ "INFO", "DEBUG", "STUDY", "ERROR" ]

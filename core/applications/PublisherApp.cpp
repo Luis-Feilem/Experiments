@@ -175,18 +175,19 @@ void PublisherApp::create_publisher() {
     console.log_debug("[PublisherApp] Created " + technology + " publisher");
 }
 
-void PublisherApp::publish_on_topic(std::string topic){
+void PublisherApp::publish_on_topic(std::string topic, int i){
     const Payload& message = pick_random_payload(payloads);
-    console.log_info("[PublisherApp] Publishing on topic " + topic);
+    console.log_study("[PublisherApp] Publishing message "+ std::to_string(i) + " on topic " + topic);
     publisher->send_message(message, topic);
+    console.log_study("[PublisherApp] Published message "+ std::to_string(i) + " on topic " + topic);
 }
 
-void PublisherApp::publish_on_all_topics(){
+void PublisherApp::publish_on_all_topics(int i){
     try {
         std::istringstream ss(topics);
         std::string topic;
         while (std::getline(ss, topic, ',')) {
-            publish_on_topic(topic);
+            publish_on_topic(topic, i);
         }
     } catch (const std::exception& e){
         console.log_error("[Publisher App] Exception during publish: " + std::string(e.what()));
@@ -208,19 +209,19 @@ void PublisherApp::terminate_all_topics(){
 
 // Runs the publisher logic (can now be fully generalized)
 void PublisherApp::run() {
-    console.log_debug("[PublisherApp] Starting publisher");
+    console.log_study("[PublisherApp] Starting publisher");
     publisher->initialize();
     // wait for consumer to start and connect, and to synchronize with metrics gathering
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     if (message_count > 0) {
-        console.log_debug("[PublisherApp] Initialized publisher. It will send a total of " + std::to_string(message_count) 
+        console.log_study("[PublisherApp] Initialized publisher. It will send a total of " + std::to_string(message_count) 
             + " messages, one every " + std::to_string(update_every) + " us"
         );
         run_messages();
     }
     else if (duration > 0) {
-        console.log_debug("[PublisherApp] Initialized publisher. It will send messages for " + std::to_string(duration) 
+        console.log_study("[PublisherApp] Initialized publisher. It will send messages for " + std::to_string(duration) 
             + " seconds, one every " + std::to_string(update_every) + " us"
         );
         run_duration();
@@ -229,7 +230,9 @@ void PublisherApp::run() {
         console.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive values. No messages are sent.");
     }
     // Send termination signal (poison pill)
+    console.log_study("[PublisherApp] Terminating publisher. Sending termination signal to all topics.");	
     terminate_all_topics();
+    console.log_study("[PublisherApp] Terminated publisher. Sending termination signal to all topics.");
 }
 
 void PublisherApp::run_messages(){
@@ -237,7 +240,7 @@ void PublisherApp::run_messages(){
     while (i < message_count) {
         console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1));
         // std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-        publish_on_all_topics();
+        publish_on_all_topics(i);
         console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
         i++;
         if (i < message_count){
@@ -256,7 +259,7 @@ void PublisherApp::run_duration(){
     while (steady_clock::now() < end_time) {
         console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1));
         // std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-        publish_on_all_topics();
+        publish_on_all_topics(i);
         console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
         console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
         std::this_thread::sleep_for(microseconds(update_every));

@@ -48,13 +48,13 @@ public:
 
 private:
     // Send update on topic
-    void publish_on_topic(std::string topic);
+    void publish_on_topic(std::string topic, int i);
 
     // Terminate topic
     void terminate_topic(std::string topic);
 
     // Send update on all topics
-    void publish_on_all_topics();
+    void publish_on_all_topics(int i);
 
     // Terminate all topics
     void terminate_all_topics();
