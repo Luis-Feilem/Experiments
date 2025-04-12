@@ -13,6 +13,7 @@
 #include "Logger.hpp"
 #include "PublisherFactory.hpp"
 #include "TechnologyLoader.hpp"
+#include "IPublisher.hpp"
 
 
 class PublisherApp {
@@ -22,13 +23,12 @@ protected:
     int message_count;
     int duration;
     int update_every;
-    size_t payload_min_size;
-    size_t payload_max_size;
+    size_t payload_size;
     size_t payload_samples;
+    PayloadKind payload_kind;
     std::vector<Payload> payloads;
 
     Logger console;
-    Logger::LogLevel log_level;
 
     std::unique_ptr<IPublisher> publisher;
 
@@ -69,9 +69,9 @@ private:
 
     Payload generate_payload_in_memory(size_t target_bytes);
 
-    std::vector<Payload> generate_payloads(size_t min_size, size_t max_size, size_t num_samples);
+    void generate_payloads(size_t max_size, size_t num_samples);
 
-    const Payload& pick_random_payload(const std::vector<Payload>& payloads);
+    const Payload& pick_random_payload();
 };
 
 #endif // IPUBLISHER_APP_HPP

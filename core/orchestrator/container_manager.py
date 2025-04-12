@@ -68,9 +68,9 @@ class ContainerManager:
                 "MESSAGES": n_messages,
                 "DURATION": duration,
                 "UPDATE_EVERY": pub_rate,
-                "PAYLOAD_MIN_SIZE": 1,
-                "PAYLOAD_MAX_SIZE": 100, # read msg size from config
+                "PAYLOAD_SIZE": 100, # TODO read msg size from config
                 "PAYLOAD_SAMPLES": 5, # can be hardcoded for now?
+                "PAYLOAD_KIND": "FLAT", # TODO read payload kind from config
             }
             print(f"[CM] Environment: {environment}")
             print(f"[CM] Starting container from image {tech_name}_publisher in mode {mode}")

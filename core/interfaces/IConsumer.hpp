@@ -24,6 +24,9 @@ public:
     // Subscribes to a topic (if applicable)
     virtual void subscribe(const std::string &topic) = 0;
 
+    // Deserializes a message from a string format to a Payload object
+    virtual Payload deserialize(const std::string& raw_message) = 0;
+
     // Receives a message (blocking or non-blocking depending on implementation)
     virtual Payload receive_message() = 0;
 

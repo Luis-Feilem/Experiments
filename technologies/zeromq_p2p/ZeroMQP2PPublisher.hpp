@@ -18,6 +18,9 @@ public:
     void initialize() override;
     void send_message(const Payload &message, std::string topic) override;
 
+    std::string serialize(const Payload& message);
+    std::string serialize(const Payload& message, std::string topic);
+
 protected:
     
 };

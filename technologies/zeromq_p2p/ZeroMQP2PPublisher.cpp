@@ -5,29 +5,36 @@
 #include <sstream>
 #include "PublisherFactory.hpp"
 
+std::string ZeroMQP2PPublisher::serialize(const Payload& message){
+    console.log_error("[ZeroMQP2P Publisher] serialize called without topic. This should not happen.");
+    return "ERROR";
+}
 
-inline std::vector<char> serialize_payload_with_topic(const std::string& topic, const Payload& payload) {
+std::string ZeroMQP2PPublisher::serialize(const Payload& message, std::string topic) {
     std::vector<char> buffer;
 
-    // 1. Prefix with topic length (1 byte)
+    // 1. Topic length and content
     uint8_t topic_len = static_cast<uint8_t>(topic.size());
     buffer.push_back(topic_len);
-
-    // 2. Topic bytes
     buffer.insert(buffer.end(), topic.begin(), topic.end());
 
-    // 3. Label length
-    uint8_t label_len = static_cast<uint8_t>(payload.label.size());
-    buffer.push_back(label_len);
+    // 2. Message ID length and content
+    uint16_t id_len = static_cast<uint16_t>(message.message_id.size());
+    buffer.insert(buffer.end(),
+                  reinterpret_cast<const char*>(&id_len),
+                  reinterpret_cast<const char*>(&id_len) + sizeof(id_len));
+    buffer.insert(buffer.end(), message.message_id.begin(), message.message_id.end());
 
-    // 4. Label content
-    buffer.insert(buffer.end(), payload.label.begin(), payload.label.end());
+    // 3. Data size
+    uint64_t data_size = static_cast<uint64_t>(message.data_size);
+    buffer.insert(buffer.end(),
+                  reinterpret_cast<const char*>(&data_size),
+                  reinterpret_cast<const char*>(&data_size) + sizeof(data_size));
 
-    // 5. Double values
-    const char* values_bytes = reinterpret_cast<const char*>(payload.values.data());
-    buffer.insert(buffer.end(), values_bytes, values_bytes + payload.values.size() * sizeof(double));
+    // 4. Raw data
+    buffer.insert(buffer.end(), message.data.begin(), message.data.end());
 
-    return buffer;
+    return std::string(buffer.begin(), buffer.end());
 }
 
 ZeroMQP2PPublisher::ZeroMQP2PPublisher(const Logger& logger)
@@ -64,28 +71,21 @@ void ZeroMQP2PPublisher::initialize() {
     }
 }
 
-void ZeroMQP2PPublisher::send_message(const Payload &message, std::string topic) {
+void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic) {
     try {
-        // std::string full_message = topic + " " + message;
-        // zmq::message_t zmq_message(full_message.begin(), full_message.end());
-        std::vector<char> buffer = serialize_payload_with_topic(topic, message);
-        // Debug print to make sure serialization worked:
-        console.log_debug("[ZeroMQP2P Publisher] Serialized buffer size: " + std::to_string(buffer.size()));
+        std::string raw = serialize(message, topic);
 
-        if (buffer.empty()) {
-            console.log_error("[ZeroMQP2P Publisher] Buffer is EMPTY after serialization!");
-        }
-        std::ostringstream hex_out;
-        for (char c : buffer) {
-            hex_out << std::hex << std::setw(2) << std::setfill('0') << (static_cast<int>(c) & 0xff) << " ";
-        }
-        console.log_debug("[ZeroMQP2P Publisher] Serialized bytes: " + hex_out.str());
+        console.log_debug("[ZeroMQP2P Publisher] Serialized payload ID: " + message.message_id + 
+                          " and size: " + std::to_string(message.data_size) + " bytes");
 
-        zmq::message_t zmq_message(buffer.begin(), buffer.end());
-        console.log_info("[ZeroMQP2P Publisher] [" + topic + "] "+ std::to_string(zmq_message.size()) + " B"); 
+        zmq::message_t zmq_message(raw.begin(), raw.end());
         publisher.send(zmq_message, zmq::send_flags::none);
+
+        console.log_study("[ZeroMQP2P Publisher] Sent " + std::to_string(zmq_message.size()) +
+                         " B on topic " + topic);
         console.log_debug("[ZeroMQP2P Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
-    } catch (const zmq::error_t &e) {
+
+    } catch (const zmq::error_t& e) {
         console.log_error("[ZeroMQP2P Publisher] Send failed: " + std::string(e.what()));
     }
 }

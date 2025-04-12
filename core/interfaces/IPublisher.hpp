@@ -18,6 +18,9 @@ public:
     // Initializes the publisher (e.g., connects to a broker)
     virtual void initialize() = 0;
 
+    // Serializes a Payload object to a string format
+    virtual std::string serialize(const Payload& message) = 0;
+
     // Sends a message
     virtual void send_message(const Payload &message, std::string topic) = 0;
 };

@@ -8,6 +8,7 @@
 #include "Logger.hpp"
 #include "ConsumerFactory.hpp"
 #include "TechnologyLoader.hpp"
+#include "IConsumer.hpp"
 
 class ConsumerApp {
 protected:

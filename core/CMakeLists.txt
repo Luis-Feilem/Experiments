@@ -28,12 +28,22 @@ if(UNIX)
     )
 endif()
 
+add_library(core-payload STATIC)
+target_sources(core-payload PRIVATE 
+    payload/Payload.cpp
+)
+target_include_directories(core-payload PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/payload 
+)
+set_target_properties(core-payload PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 add_library(core-interfaces INTERFACE) # don't compile and don't produce library artifact on disk, but specify usage requirements
 target_include_directories(core-interfaces INTERFACE 
     ${CMAKE_CURRENT_SOURCE_DIR}/interfaces # when linking this library, include these headers
 )
 target_link_libraries(core-interfaces INTERFACE
     core-logger
+    core-payload
 )
 
 # Make this library available for use in other projects

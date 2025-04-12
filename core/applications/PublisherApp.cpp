@@ -12,91 +12,45 @@ T from_string(const std::string& str, T default_value) {
     return result;
 }
 
-// Random alphanumeric string
-inline std::string generate_random_string(size_t length) {
-    static const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<> dist(0, chars.size() - 1);
-
-    std::string result;
-    result.reserve(length);
-    for (size_t i = 0; i < length; ++i) {
-        result += chars[dist(rng)];
-    }
-    return result;
-}
 // Generate termination message
 Payload PublisherApp::generate_termination_message(){
     Payload payload;
 
-    payload.label = id + ":__END__"; // add "source" information to termination signal
-    payload.values.reserve(0);
-    return payload;
-}
-
-// Generate one Payload with roughly target_bytes in memory
-Payload PublisherApp::generate_payload_in_memory(size_t target_bytes) {
-    Payload payload = {"",std::vector<double>()};
-
-    size_t label_length = 5 + (std::rand() % 15);  // 5–19 chars
-    payload.label = generate_random_string(label_length);
-
-    size_t label_size_bytes = payload.label.size(); // 1 byte per char
-    size_t remaining_bytes = (target_bytes > label_size_bytes) ? (target_bytes - label_size_bytes -1) : 0;
-    size_t num_values = remaining_bytes / sizeof(double); // 8 bytes per double
-
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<double> value_dist(0.0, 1000.0);
-    payload.values.reserve(num_values);
-
-    for (size_t i = 0; i < num_values; ++i) {
-        payload.values.push_back(value_dist(rng));
-    }
-
+    payload.message_id = id + ":__END__"; // add "source" information to termination signal
+    payload.data.reserve(0);
     return payload;
 }
 
 // Batch generation of payloads across size range
-std::vector<Payload> PublisherApp::generate_payloads(size_t min_size, size_t max_size, size_t num_samples) {
-    std::vector<Payload> payloads;
-    if (num_samples <= 1) {
-        payloads.push_back(generate_payload_in_memory(min_size));
-        return payloads;
-    }
-
-    size_t step = (max_size - min_size) / (num_samples - 1);
+void PublisherApp::generate_payloads(size_t target_size, size_t num_samples) {
     for (size_t i = 0; i < num_samples; ++i) {
-        size_t target_size = min_size + i * step;
-        payloads.push_back(generate_payload_in_memory(target_size));
+        payloads.push_back(Payload::make(id, i, target_size, payload_kind));
     }
-
-    return payloads;
 }
 
 // Pick a random payload from the pool
-const Payload& PublisherApp::pick_random_payload(const std::vector<Payload>& payloads) {
+const Payload& PublisherApp::pick_random_payload() {
     static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<> dist(0, payloads.size() - 1);
     return payloads[dist(rng)];
 }
 
 PublisherApp::PublisherApp(Logger::LogLevel log_level){
-    log_level = log_level;
     console = Logger(log_level);
     load_from_env();
-    payloads = generate_payloads(payload_min_size, payload_max_size, payload_samples);
+    generate_payloads(payload_size, payload_samples);
 }
 
 void PublisherApp::load_from_env() {
     const char* env_id = std::getenv("CONTAINER_ID");
     const char* env_topics = std::getenv("TOPICS");
     const char* env_update = std::getenv("UPDATE_EVERY");
-    const char* env_pmins = std::getenv("PAYLOAD_MIN_SIZE");
-    const char* env_pmaxs = std::getenv("PAYLOAD_MAX_SIZE");
+    const char* env_psize = std::getenv("PAYLOAD_SIZE");
     const char* env_psamp = std::getenv("PAYLOAD_SAMPLES");
+    const char* env_pkind = std::getenv("PAYLOAD_KIND");
 
 
-    if (!env_id || !env_topics || !env_update || !env_pmins || !env_pmaxs || !env_psamp) {
+    if (!env_id || !env_topics || !env_update || !env_psize || !env_psamp) {
         std::string err_msg;
         if (std::string(env_id).empty()){
             err_msg = "[PublisherApp] Missing required environment variable CONTAINER_ID";
@@ -113,18 +67,18 @@ void PublisherApp::load_from_env() {
             console.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
-        else if(std::string(env_pmins).empty()){
-            err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_MIN_SIZE";
-            console.log_error(err_msg);
-            throw std::runtime_error(err_msg);
-        }
-        else if(std::string(env_pmaxs).empty()){
-            err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_MAX_SIZE";
+        else if(std::string(env_psize).empty()){
+            err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_SIZE";
             console.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_psamp).empty()){
             err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_SAMPLES";
+            console.log_error(err_msg);
+            throw std::runtime_error(err_msg);
+        }
+        else if(std::string(env_pkind).empty()){
+            err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_KIND";
             console.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
@@ -140,18 +94,18 @@ void PublisherApp::load_from_env() {
     message_count = std::getenv("MESSAGES")? from_string<int>(std::getenv("MESSAGES"), 0) : 0;
     duration = std::getenv("DURATION")? from_string<int>(std::getenv("DURATION"), 0) : 0;
     update_every = from_string(env_update,5000000);
-    payload_min_size = std::atoi(std::getenv("PAYLOAD_MIN_SIZE")); 
-    payload_max_size = std::atoi(std::getenv("PAYLOAD_MAX_SIZE")); 
+    payload_size = std::atoi(std::getenv("PAYLOAD_SIZE")); 
     payload_samples = std::atoi(std::getenv("PAYLOAD_SAMPLES"));
+    payload_kind = Payload::string_to_payloadkind(std::getenv("PAYLOAD_KIND"));
 
     console.log_debug("[PublisherApp] Loaded from environment: ID=" + id 
         + ", TOPICS=" + topics 
         + ", MESSAGES=" + std::to_string(message_count)
         + ", DURATION=" + std::to_string(duration)
         + ", UPDATE_EVERY=" + std::to_string(update_every) + " us"
-        + ", PAYLOAD_MIN_SIZE+" + std::to_string(payload_min_size)
-        + ", PAYLOAD_MAX_SIZE+" + std::to_string(payload_max_size)
-        + ", PAYLOAD_SAMPLES+" + std::to_string(payload_samples)
+        + ", PAYLOAD_SIZE=" + std::to_string(payload_size)
+        + ", PAYLOAD_SAMPLES=" + std::to_string(payload_samples)
+        + ", PAYLOAD_KIND=" + Payload::payloadkind_to_string(payload_kind)
     );
 }
 
@@ -176,10 +130,15 @@ void PublisherApp::create_publisher() {
 }
 
 void PublisherApp::publish_on_topic(std::string topic, int i){
-    const Payload& message = pick_random_payload(payloads);
-    console.log_study("[PublisherApp] Publishing message "+ std::to_string(i) + " on topic " + topic);
+    const Payload& base = pick_random_payload();
+    Payload message = Payload::reuse_with_new_id(id, i, base.data, base.kind);
+    console.log_study("[PublisherApp] Publishing message " + std::to_string(i) + 
+                      " of size " + std::to_string(base.data_size) + 
+                      " to topic " + topic);
     publisher->send_message(message, topic);
-    console.log_study("[PublisherApp] Published message "+ std::to_string(i) + " on topic " + topic);
+    console.log_study("[PublisherApp] Published message " + std::to_string(i) + 
+                      " of size " + std::to_string(base.data_size) + 
+                      " to topic " + topic);
 }
 
 void PublisherApp::publish_on_all_topics(int i){
@@ -212,7 +171,7 @@ void PublisherApp::run() {
     console.log_study("[PublisherApp] Starting publisher");
     publisher->initialize();
     // wait for consumer to start and connect, and to synchronize with metrics gathering
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 
     if (message_count > 0) {
         console.log_study("[PublisherApp] Initialized publisher. It will send a total of " + std::to_string(message_count) 
@@ -236,17 +195,18 @@ void PublisherApp::run() {
 }
 
 void PublisherApp::run_messages(){
-    int i = 0;
-    while (i < message_count) {
-        console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1));
+    int i = 1;
+    while (i <= message_count) {
+        console.log_info("[PublisherApp] Sending message " + std::to_string(i));
         // std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
         publish_on_all_topics(i);
-        console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
+        console.log_info("[PublisherApp] Sent message " + std::to_string(i));
         i++;
-        if (i < message_count){
-            console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
-            std::this_thread::sleep_for(std::chrono::microseconds(update_every));
-        }
+        // If you want to simulate a data generating system, uncomment this section
+        // if (i < message_count){
+        //     console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
+        //     std::this_thread::sleep_for(std::chrono::microseconds(update_every));
+        // }
     }
 }
 

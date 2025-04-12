@@ -21,6 +21,7 @@ public:
     void initialize() override;
     void subscribe(const std::string &topic) override;
     Payload receive_message() override;
+    Payload deserialize(const std::string& raw_message) override;
 };
 
 #endif // ZEROMQP2P_CONSUMER_HPP

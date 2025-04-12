@@ -5,49 +5,51 @@
 #include <sstream>
 #include "ConsumerFactory.hpp"
 
-inline Payload deserialize_payload(const void* data, size_t size) {
-    const char* byte_data = static_cast<const char*>(data);
+Payload ZeroMQP2PConsumer::deserialize(const std::string& raw_message) {
+    const char* data = raw_message.data();
+    size_t offset = 0;
 
-    if (size < 1) throw std::runtime_error("Message too small to contain payload");
+    // 1. Topic length and content (skip over it)
+    uint8_t topic_len = static_cast<uint8_t>(data[offset]);
+    offset += 1;
 
-    // Step 1: Read label length
-    uint8_t label_len = static_cast<uint8_t>(byte_data[0]);
+    if (raw_message.size() < offset + topic_len) {
+        throw std::runtime_error("Invalid message: incomplete topic");
+    }
 
-    if (size < 1 + label_len) throw std::runtime_error("Payload size mismatch with label");
+    std::string topic(data + offset, topic_len);
+    offset += topic_len;
 
-    // Step 2: Extract label
-    std::string label(byte_data + 1, label_len);
+    // 2. Message ID length and content
+    uint16_t id_len;
+    std::memcpy(&id_len, data + offset, sizeof(uint16_t));
+    offset += sizeof(uint16_t);
 
-    // Step 3: Extract values
-    size_t values_start = 1 + label_len;
-    size_t remaining_bytes = size - values_start;
-    size_t num_doubles = remaining_bytes / sizeof(double);
+    if (raw_message.size() < offset + id_len) {
+        throw std::runtime_error("Invalid message: incomplete message_id");
+    }
 
-    std::vector<double> values(num_doubles);
-    std::memcpy(values.data(), byte_data + values_start, num_doubles * sizeof(double));
+    std::string message_id(data + offset, id_len);
+    offset += id_len;
 
-    return Payload{label, values};
-}
+    // 3. Data size
+    uint64_t data_size;
+    std::memcpy(&data_size, data + offset, sizeof(uint64_t));
+    offset += sizeof(uint64_t);
 
-inline Payload deserialize_payload_with_topic(const void* data, size_t size, std::string& out_topic) {
-    const char* byte_data = static_cast<const char*>(data);
+    if (raw_message.size() < offset + data_size) {
+        throw std::runtime_error("Invalid message: data section incomplete");
+    }
 
-    if (size < 1) throw std::runtime_error("Message too short to contain topic length");
+    std::vector<uint8_t> payload_data(data + offset, data + offset + data_size);
 
-    // 1. Topic length
-    uint8_t topic_len = static_cast<uint8_t>(byte_data[0]);
+    Payload p;
+    p.message_id = message_id;
+    p.data_size = data_size;
+    p.data = std::move(payload_data);
+    p.kind = PayloadKind::FLAT; // Hardcoded until dynamic handling is needed
 
-    if (size < 1 + topic_len + 1)
-        throw std::runtime_error("Message too short after topic");
-
-    // 2. Topic string
-    out_topic = std::string(byte_data + 1, topic_len);
-
-    // 3. Shift pointer to actual payload
-    const char* payload_data = byte_data + 1 + topic_len;
-    size_t payload_size = size - (1 + topic_len);
-
-    return deserialize_payload(payload_data, payload_size);
+    return p;
 }
 
 ZeroMQP2PConsumer::ZeroMQP2PConsumer(const Logger& logger)
@@ -98,7 +100,6 @@ void ZeroMQP2PConsumer::initialize() {
             }
         }
     }
-    
 
     try {
         for(const auto& publisher : unique_publishers){
@@ -122,49 +123,44 @@ void ZeroMQP2PConsumer::subscribe(const std::string &topic) {
 
 Payload ZeroMQP2PConsumer::receive_message() {
     zmq::message_t zmq_message;
-    Payload payload = {"",{}};
+    Payload message;
+
     try {
         auto result = subscriber.recv(zmq_message, zmq::recv_flags::none);
         if (!result) {
             console.log_error("[ZeroMQP2P Consumer] Failed to receive message!");
-            return payload;
+            return message;
         }
 
-        const unsigned char* bytes = static_cast<const unsigned char*>(zmq_message.data());
-        std::ostringstream hex_out;
-        for (size_t i = 0; i < zmq_message.size(); ++i) {
-            hex_out << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bytes[i]) << " ";
-        }
-        console.log_debug("[ZeroMQP2P Consumer] Message bytes: " + hex_out.str());
+        std::string raw(static_cast<const char*>(zmq_message.data()), zmq_message.size());
+        message = deserialize(raw);
 
-        // std::string message(static_cast<char *>(zmq_message.data()), zmq_message.size());
-        // size_t space_pos = message.find(' ');
-        // std::string topic = message.substr(0, space_pos);
-        // std::string payload = message.substr(space_pos + 1);
-        std::string topic;
-        std::string source = "";
-        payload = deserialize_payload_with_topic(zmq_message.data(), zmq_message.size(), topic);
+        console.log_study("[ZeroMQP2P Consumer] Received message ID: " + message.message_id +
+                         ", Size: " + std::to_string(message.data_size) + " bytes");
 
-        console.log_info("[ZeroMQP2P Consumer] Received " + std::to_string(static_cast<unsigned long long> (zmq_message.size())) + "B in topic " + topic);
-        if (payload.label.find("__END__")  != std::string::npos) {
-            source = payload.label.substr(0, payload.label.find(":"));
+        // Poison pill handling based on ID
+        if (message.message_id.find("__END__") != std::string::npos) {
+            std::string source = message.message_id.substr(0, message.message_id.find(":"));
+            std::string topic = message.message_id.substr(message.message_id.find(":") + 1);
             terminated_streams.insert({source, topic});
-            console.log_info("[ZeroMQP2P Consumer] Received termination for topic: " + topic + " from source " + source);
-            console.log_debug("[ZeroMQP2P Consumer] Streams closed: " + std::to_string(terminated_streams.size()) + "/" + std::to_string(subscribed_streams.size()));
-    
+
+            console.log_info("[ZeroMQP2P Consumer] Termination signal from source: " + source +
+                             " on topic: " + topic);
+            console.log_debug("[ZeroMQP2P Consumer] Streams closed: " +
+                              std::to_string(terminated_streams.size()) + "/" +
+                              std::to_string(subscribed_streams.size()));
+
             if (terminated_streams.size() == subscribed_streams.size()) {
-                console.log_info("[ZeroMQP2P Consumer] All publishers terminated.");
                 return Payload{"__END__", {}};  // Final poison pill
             } else {
-                // Not ready to stop yet, keep listening
-                return Payload{"__ENDTOPIC__", {}};  // Signal to ignore and continue
+                return Payload{"__ENDTOPIC__", {}};  // Intermediate termination
             }
         }
 
-        return payload;
+        return message;
 
-    } catch (const zmq::error_t &e) {
+    } catch (const zmq::error_t& e) {
         console.log_error("[ZeroMQP2P Consumer] Receive failed: " + std::string(e.what()));
-        return payload;
+        return message;
     }
 }
