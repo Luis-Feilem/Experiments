@@ -18,6 +18,8 @@ Payload PublisherApp::generate_termination_message(){
 
     payload.message_id = id + ":__END__"; // add "source" information to termination signal
     payload.data.reserve(0);
+    payload.data_size = 0;
+    payload.kind = PayloadKind::TERMINATION; // set termination kind
     return payload;
 }
 

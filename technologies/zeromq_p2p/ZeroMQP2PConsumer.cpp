@@ -37,11 +37,22 @@ Payload ZeroMQP2PConsumer::deserialize(const std::string& raw_message) {
     std::memcpy(&data_size, data + offset, sizeof(uint64_t));
     offset += sizeof(uint64_t);
 
-    if (raw_message.size() < offset + data_size) {
-        throw std::runtime_error("Invalid message: data section incomplete");
-    }
+    std::vector<uint8_t> payload_data;
+    console.log_debug("[ZeroMQP2P Consumer] Deserializing message from topic: " + topic + " with ID: " + message_id +
+                     ", Data size: " + std::to_string(data_size) + " bytes");
 
-    std::vector<uint8_t> payload_data(data + offset, data + offset + data_size);
+    if (raw_message.size() < offset + data_size) {
+        if (message_id.find("__END__") != std::string::npos) {
+            payload_data = std::vector<uint8_t>{};
+            data_size = 0;
+        }
+        else{
+            throw std::runtime_error("Invalid message: data section incomplete");
+        }
+    }
+    else {
+        payload_data = std::vector<uint8_t>(data + offset, data + offset + data_size);
+    }
 
     Payload p;
     p.message_id = message_id;
@@ -141,7 +152,18 @@ Payload ZeroMQP2PConsumer::receive_message() {
         // Poison pill handling based on ID
         if (message.message_id.find("__END__") != std::string::npos) {
             std::string source = message.message_id.substr(0, message.message_id.find(":"));
-            std::string topic = message.message_id.substr(message.message_id.find(":") + 1);
+
+            // Recover topic from the raw message
+            const char* data = raw.data();
+            size_t offset = 0;
+            // 1. Topic length and content (skip over it)
+            uint8_t topic_len = static_cast<uint8_t>(data[offset]);
+            offset += 1;
+            if (raw.size() < offset + topic_len) {
+                throw std::runtime_error("Invalid message: incomplete topic");
+            }
+            std::string topic(data + offset, topic_len);
+
             terminated_streams.insert({source, topic});
 
             console.log_info("[ZeroMQP2P Consumer] Termination signal from source: " + source +

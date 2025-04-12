@@ -9,7 +9,8 @@
 enum class PayloadKind {
     BOOLEAN,
     FLAT,
-    COMPLEX
+    COMPLEX,
+    TERMINATION
 };
 
 struct Payload {

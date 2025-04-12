@@ -44,6 +44,7 @@ std::string Payload::payloadkind_to_string(PayloadKind kind) {
         case PayloadKind::BOOLEAN: return "BOOLEAN";
         case PayloadKind::FLAT: return "FLAT";
         case PayloadKind::COMPLEX: return "COMPLEX";
+        case PayloadKind::TERMINATION: return "TERMINATION";
         default: return "UNKNOWN";
     }
 }
@@ -61,6 +62,8 @@ PayloadKind Payload::string_to_payloadkind(const std::string& kind) {
         return PayloadKind::FLAT;
     } else if (kind == "COMPLEX") {
         return PayloadKind::COMPLEX;
+    } else if (kind == "TERMINATION") {
+        return PayloadKind::TERMINATION;
     } else {
         std::cerr <<"Invalid PayloadKind: " << kind << ", defaulting to FLAT" << std::endl;
         return PayloadKind::FLAT;
