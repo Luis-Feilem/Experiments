@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _PAYLOAD_H_
+#define _PAYLOAD_H_
 
 #include <string>
 #include <vector>
@@ -7,17 +9,18 @@
 #include <iostream>
 
 enum class PayloadKind {
+    TERMINATION = 0,
     BOOLEAN,
     FLAT,
-    COMPLEX,
-    TERMINATION
+    COMPLEX
 };
+const std::string TERMINATION_SIGNAL = "__END__";
 
 struct Payload {
     std::string message_id;
-    std::vector<uint8_t> data;
-    size_t data_size;
     PayloadKind kind;
+    size_t data_size;
+    std::vector<uint8_t> data;
 
     // Create a fully generated payload with specified kind and size
     static Payload make(const std::string& publisher_id, int sequence_number, size_t data_size, PayloadKind kind = PayloadKind::FLAT);
@@ -28,3 +31,5 @@ struct Payload {
     static PayloadKind string_to_payloadkind(const std::string& kind_str);
     static std::string payloadkind_to_string(PayloadKind kind);
 };
+
+#endif 

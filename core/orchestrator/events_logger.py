@@ -44,7 +44,10 @@ class ContainerEventsLogger:
         info_msg = log.split(f"[{self.log_level}]")
         row += info_msg[0].strip() # timestamp
         row += self.separator + container_name
-        row += self.separator + info_msg[1].strip().split("]")[0][1:] # actor
-        row += self.separator + ']'.join(info_msg[1].strip().split("]")[1:]).strip() # message
+        if self.log_level != "STUDY":
+            row += self.separator + info_msg[1].strip().split("]")[0][1:] # actor
+            row += self.separator + ']'.join(info_msg[1].strip().split("]")[1:]).strip() # message
+        else: 
+            row += self.separator + info_msg[1].strip()
         row += "\n"
         return row

@@ -81,7 +81,7 @@ void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic)
         zmq::message_t zmq_message(raw.begin(), raw.end());
         publisher.send(zmq_message, zmq::send_flags::none);
 
-        console.log_study("[ZeroMQP2P Publisher] Sent " + std::to_string(zmq_message.size()) +
+        console.log_info("[ZeroMQP2P Publisher] Sent " + std::to_string(zmq_message.size()) +
                          " B on topic " + topic);
         console.log_debug("[ZeroMQP2P Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
 

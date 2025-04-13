@@ -20,29 +20,25 @@ void ConsumerApp::create_consumer() {
 
 // Initializes and runs the consumer logic
 void ConsumerApp::run() {
-    int termination_signals = 0;
-    console.log_study("[ConsumerApp] Starting consumer");
+    console.log_study("Initializing");
     consumer->initialize();
-    console.log_study("[ConsumerApp] Initialized consumer");
+    console.log_study("Initialized");
 
     while (true) {
         console.log_debug("[ConsumerApp] Waiting for message...");
         Payload message = consumer->receive_message();
         if (message.message_id == ""){
-            console.log_study("[ConsumerApp] Received message with no label -> Retrying.");
+            console.log_info("[ConsumerApp] Received message with no label -> Retrying.");
             continue;
         }
-        if (message.message_id == "__ENDTOPIC__") {
-            termination_signals++;
-            console.log_study("[ConsumerApp] Received termination, total is now " + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
-            continue; // Not a usable payload
+        if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
+            console.log_study("Termination," + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
+            if (consumer->get_terminated_streams_size() >= consumer->get_subscribed_streams_size()) {
+                break; // All streams terminated
+            }
+            continue;
         }
-        if (message.message_id == "__END__") {
-            termination_signals++;
-            console.log_study("[ConsumerApp] Received termination from all sources and topics (" + std::to_string(termination_signals) + ")");
-            break;
-        }
-        console.log_study("[ConsumerApp] Received update on " + message.message_id + " of size " + std::to_string(message.data_size));
+        console.log_study("Update," + message.message_id + "," + std::to_string(message.data_size));
     }
 }
 

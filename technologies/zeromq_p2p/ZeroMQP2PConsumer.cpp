@@ -42,7 +42,7 @@ Payload ZeroMQP2PConsumer::deserialize(const std::string& raw_message) {
                      ", Data size: " + std::to_string(data_size) + " bytes");
 
     if (raw_message.size() < offset + data_size) {
-        if (message_id.find("__END__") != std::string::npos) {
+        if (message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
             payload_data = std::vector<uint8_t>{};
             data_size = 0;
         }
@@ -146,11 +146,11 @@ Payload ZeroMQP2PConsumer::receive_message() {
         std::string raw(static_cast<const char*>(zmq_message.data()), zmq_message.size());
         message = deserialize(raw);
 
-        console.log_study("[ZeroMQP2P Consumer] Received message ID: " + message.message_id +
+        console.log_info("[ZeroMQP2P Consumer] Received message ID: " + message.message_id +
                          ", Size: " + std::to_string(message.data_size) + " bytes");
 
         // Poison pill handling based on ID
-        if (message.message_id.find("__END__") != std::string::npos) {
+        if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
             std::string source = message.message_id.substr(0, message.message_id.find(":"));
 
             // Recover topic from the raw message
@@ -172,11 +172,8 @@ Payload ZeroMQP2PConsumer::receive_message() {
                               std::to_string(terminated_streams.size()) + "/" +
                               std::to_string(subscribed_streams.size()));
 
-            if (terminated_streams.size() == subscribed_streams.size()) {
-                return Payload{"__END__", {}};  // Final poison pill
-            } else {
-                return Payload{"__ENDTOPIC__", {}};  // Intermediate termination
-            }
+            return Payload::make(message.message_id.substr(0, message.message_id.find(':')) + "-" + topic, 
+                                 0, 0, PayloadKind::TERMINATION);
         }
 
         return message;

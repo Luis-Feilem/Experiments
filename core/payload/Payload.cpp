@@ -6,6 +6,11 @@ Payload Payload::make(const std::string& publisher_id, int sequence_number, size
     p.kind = kind;
 
     switch (kind) {
+        case PayloadKind::TERMINATION:
+            p.message_id = publisher_id + ":" + TERMINATION_SIGNAL;
+            p.data = { 0xFF }; // Termination signal
+            p.data_size = 1;
+            return p;
         case PayloadKind::BOOLEAN:
             // Only 1 byte: 0 or 1
             p.data = { static_cast<uint8_t>(sequence_number % 2) };

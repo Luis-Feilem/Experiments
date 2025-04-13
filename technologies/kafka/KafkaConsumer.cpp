@@ -124,42 +124,49 @@ void KafkaConsumer::initialize() {
 }
 
 
-inline Payload deserialize_payload(const std::string& data) {
-    Payload result;
+Payload KafkaConsumer::deserialize(const std::string& raw) {
+    const char* data = raw.data();
     size_t offset = 0;
+    console.log_debug("[Kafka Consumer] Deserializing payload of size " + std::to_string(raw.size()));
 
-    // Step 1: Extract label length
-    if (data.size() < offset + sizeof(uint32_t))
-        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for label length");
-    uint32_t label_len;
-    std::memcpy(&label_len, data.data() + offset, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
+    uint16_t id_len;
+    std::memcpy(&id_len, data + offset, sizeof(uint16_t));
+    offset += sizeof(uint16_t);
+    console.log_debug("[Kafka Consumer] Message ID length: " + std::to_string(id_len));
 
-    // Step 2: Extract label
-    if (data.size() < offset + label_len)
-        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for label string");
-    result.label = std::string(data.data() + offset, label_len);
-    offset += label_len;
+    std::string message_id(data + offset, id_len);
+    offset += id_len;
+    console.log_debug("[Kafka Consumer] Message ID: " + message_id);
 
-    // Step 3: Extract number of values
-    if (data.size() < offset + sizeof(uint32_t))
-        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for value count");
-    uint32_t num_vals;
-    std::memcpy(&num_vals, data.data() + offset, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
+    uint8_t kind;
+    std::memcpy(&kind, data + offset, sizeof(uint8_t));
+    PayloadKind kind_payload = static_cast<PayloadKind>(kind);
+    offset += sizeof(uint8_t);
+    console.log_debug("[Kafka Consumer] Payload kind: " + Payload::payloadkind_to_string(kind_payload) + 
+                     " (" + std::to_string(sizeof(PayloadKind)) + " bytes)");
 
-    // Step 4: Extract values
-    if (data.size() < offset + num_vals * sizeof(double))
-        throw std::runtime_error("[Kafka Consumer] Invalid payload: insufficient data for values");
-    result.values.reserve(num_vals);
-    for (uint32_t i = 0; i < num_vals; ++i) {
-        double v;
-        std::memcpy(&v, data.data() + offset, sizeof(double));
-        offset += sizeof(double);
-        result.values.push_back(v);
+    uint64_t data_size;
+    std::memcpy(&data_size, data + offset, sizeof(uint64_t));
+    offset += sizeof(uint64_t);
+    console.log_debug("[Kafka Consumer] Data size: " + std::to_string(data_size) + 
+                     " (" + std::to_string(sizeof(uint64_t)) + " bytes)");
+
+    if (raw.size() < offset + data_size) {
+        throw std::runtime_error("Invalid Kafka message: incomplete data section");
     }
+    console.log_debug("[Kafka Consumer] Data section size: " + std::to_string(data_size) + 
+                     " (" + std::to_string(sizeof(uint64_t)) + " bytes)");
 
-    return result;
+    // todo: variety of PayloadKind may require different deserialization methods
+    std::vector<uint8_t> payload_data(data + offset, data + offset + data_size);
+
+    Payload p;
+    p.message_id = message_id;
+    p.kind = kind_payload;
+    p.data_size = data_size;
+    p.data = std::move(payload_data);
+
+    return p;
 }
 
 
@@ -182,23 +189,18 @@ Payload KafkaConsumer::receive_message() {
         try {
             // COPY from message buffer BEFORE destroying
             std::string raw(static_cast<const char*>(msg->payload), msg->len);
-            payload = deserialize_payload(raw);
+            payload = deserialize(raw);
         } catch (const std::exception& e) {
             console.log_error("[Kafka Consumer] Failed to deserialize payload: " + std::string(e.what()));
         }
 
-        if (payload.label.find("__END__")  != std::string::npos) {
+        if (payload.message_id.find(TERMINATION_SIGNAL)  != std::string::npos) {
             terminated_streams.insert({broker_, topic});
             console.log_info("[Kafka Consumer] Received termination for topic: " + topic);
             console.log_debug("[Kafka Consumer] Streams closed: " + std::to_string(terminated_streams.size()) + "/" + std::to_string(subscribed_streams.size()));
             // rd_kafka_message_destroy(msg);
-            if (terminated_streams.size() == subscribed_streams.size()) {
-                console.log_info("[Kafka Consumer] All publishers terminated.");
-                payload = {"__END__", {}};  // Final poison pill
-            } else {
-                // Not ready to stop yet, keep listening
-                payload = {"__ENDTOPIC__", {}};  // Signal to ignore and continue
-            }
+            payload = Payload::make(payload.message_id.substr(0, payload.message_id.find(':')) + "-" + topic, 
+                                    0, 0, PayloadKind::TERMINATION);
         }
     }
     else{

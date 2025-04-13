@@ -21,7 +21,7 @@ add_subdirectory(core)
 add_subdirectory(core/applications)
 
 # Maybe wrap these repeated if-blocks in a function/macro or table later
-foreach(TECH kafka zeromq_p2p)
+foreach(TECH zeromq_p2p kafka)
     if(EXISTS "${CMAKE_SOURCE_DIR}/technologies/${TECH}")
         message(STATUS "Including ${TECH} technology")
         add_subdirectory("technologies/${TECH}")

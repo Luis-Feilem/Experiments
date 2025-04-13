@@ -14,13 +14,7 @@ T from_string(const std::string& str, T default_value) {
 
 // Generate termination message
 Payload PublisherApp::generate_termination_message(){
-    Payload payload;
-
-    payload.message_id = id + ":__END__"; // add "source" information to termination signal
-    payload.data.reserve(0);
-    payload.data_size = 0;
-    payload.kind = PayloadKind::TERMINATION; // set termination kind
-    return payload;
+    return Payload::make(id, 0, 0, PayloadKind::TERMINATION);
 }
 
 // Batch generation of payloads across size range
@@ -134,13 +128,13 @@ void PublisherApp::create_publisher() {
 void PublisherApp::publish_on_topic(std::string topic, int i){
     const Payload& base = pick_random_payload();
     Payload message = Payload::reuse_with_new_id(id, i, base.data, base.kind);
-    console.log_study("[PublisherApp] Publishing message " + std::to_string(i) + 
-                      " of size " + std::to_string(base.data_size) + 
-                      " to topic " + topic);
+    console.log_study("Publishing," + std::to_string(i) + 
+                      "," + std::to_string(base.data_size) + 
+                      "," + topic);
     publisher->send_message(message, topic);
-    console.log_study("[PublisherApp] Published message " + std::to_string(i) + 
-                      " of size " + std::to_string(base.data_size) + 
-                      " to topic " + topic);
+    console.log_study("Published," + std::to_string(i) + 
+                      "," + std::to_string(base.data_size) + 
+                      "," + topic);
 }
 
 void PublisherApp::publish_on_all_topics(int i){
@@ -156,8 +150,9 @@ void PublisherApp::publish_on_all_topics(int i){
 }
 
 void PublisherApp::terminate_topic(std::string topic){
-    console.log_info("[PublisherApp] Closing stream for topic " + topic);
+    console.log_study("Closing," + topic);
     publisher->send_message(generate_termination_message(), topic);
+    console.log_study("Closed," + topic);
 }
 
 void PublisherApp::terminate_all_topics(){
@@ -170,20 +165,22 @@ void PublisherApp::terminate_all_topics(){
 
 // Runs the publisher logic (can now be fully generalized)
 void PublisherApp::run() {
-    console.log_study("[PublisherApp] Starting publisher");
+    console.log_study("Initializing");
     publisher->initialize();
     // wait for consumer to start and connect, and to synchronize with metrics gathering
-    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+    int sleep_time = 4000; // milliseconds
+    console.log_study("Initialized," + std::to_string(sleep_time));
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 
     if (message_count > 0) {
-        console.log_study("[PublisherApp] Initialized publisher. It will send a total of " + std::to_string(message_count) 
-            + " messages, one every " + std::to_string(update_every) + " us"
+        console.log_study("Goal: " + std::to_string(message_count) 
+            + " messages," + std::to_string(update_every) + " us"
         );
         run_messages();
     }
     else if (duration > 0) {
-        console.log_study("[PublisherApp] Initialized publisher. It will send messages for " + std::to_string(duration) 
-            + " seconds, one every " + std::to_string(update_every) + " us"
+        console.log_study("Goal: " + std::to_string(duration) 
+            + " seconds," + std::to_string(update_every) + " us"
         );
         run_duration();
     }
@@ -191,9 +188,9 @@ void PublisherApp::run() {
         console.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive values. No messages are sent.");
     }
     // Send termination signal (poison pill)
-    console.log_study("[PublisherApp] Terminating publisher. Sending termination signal to all topics.");	
+    console.log_study("Terminating");	
     terminate_all_topics();
-    console.log_study("[PublisherApp] Terminated publisher. Sending termination signal to all topics.");
+    console.log_study("Terminated");
 }
 
 void PublisherApp::run_messages(){

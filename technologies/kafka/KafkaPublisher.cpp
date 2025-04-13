@@ -28,7 +28,7 @@ KafkaPublisher::~KafkaPublisher() {
 
     if (producer_) {
         console.log_debug("[Kafka Publisher] Flushing");
-        rd_kafka_flush(producer_, 5000);  // Wait for delivery
+        rd_kafka_flush(producer_, 10 * 1000);  // Wait for delivery
         console.log_debug("[Kafka Publisher] Destroying");
         int remaining = rd_kafka_wait_destroyed(5000);
         if (remaining != 0) {
@@ -62,24 +62,37 @@ void KafkaPublisher::initialize() {
     console.log_info("[Kafka Publisher] Publisher initialized successfully.");
 }
 
+std::string KafkaPublisher::serialize(const Payload& payload){
+    std::vector<char> buffer;
 
-inline std::string serialize_payload(const Payload& message){
-    std::string serialized;
-    // Simple binary serialization: [label_len][label][num_vals][vals...]
-    uint32_t label_len = static_cast<uint32_t>(message.label.size());
-    uint32_t num_vals = static_cast<uint32_t>(message.values.size());
+    // Message ID
+    uint16_t id_len = static_cast<uint16_t>(payload.message_id.size());
+    buffer.insert(buffer.end(),
+                  reinterpret_cast<const char*>(&id_len),
+                  reinterpret_cast<const char*>(&id_len) + sizeof(id_len));
+    buffer.insert(buffer.end(), payload.message_id.begin(), payload.message_id.end());
 
-    serialized.append(reinterpret_cast<char*>(&label_len), sizeof(label_len));
-    serialized.append(message.label);
-    serialized.append(reinterpret_cast<char*>(&num_vals), sizeof(num_vals));
-    for (double v : message.values) {
-        serialized.append(reinterpret_cast<char*>(&v), sizeof(double));
-    }
-    return serialized;
+    // Kind
+    uint8_t kind = static_cast<uint8_t>(payload.kind);
+    buffer.insert(buffer.end(),
+                  reinterpret_cast<const char*>(&kind),
+                  reinterpret_cast<const char*>(&kind) + sizeof(kind));
+
+    // Data size
+    size_t size = static_cast<size_t>(payload.data_size);
+    buffer.insert(buffer.end(),
+                  reinterpret_cast<const char*>(&size),
+                  reinterpret_cast<const char*>(&size) + sizeof(size));
+
+    // Data
+    // todo: variety of PayloadKind may require different serialization methods
+    buffer.insert(buffer.end(), payload.data.begin(), payload.data.end());
+
+    return std::string(buffer.begin(), buffer.end());
 }
 
 void KafkaPublisher::send_message(const Payload& message, std::string topic) {
-    std::string serialized = serialize_payload(message);
+    std::string serialized = serialize(message);
 
     rd_kafka_topic_t* topic_handle = get_or_create_topic_handle(topic);
     if (!topic_handle) {
@@ -104,8 +117,8 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
         console.log_debug("Message queued for topic: " + topic);
     }
     // If message is end-of-stream, destroy the topic handle now
-    if (message.label == "__END__") {
-        console.log_info("Received __END__ signal — destroying topic handle for: " + topic);
+    if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
+        console.log_info("Received termination signal — destroying topic handle for: " + topic);
         rd_kafka_topic_destroy(topic_handle);
     }
 }

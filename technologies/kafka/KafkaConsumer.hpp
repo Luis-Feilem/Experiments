@@ -14,6 +14,7 @@ public:
     void initialize() override;
     void subscribe(const std::string& topic) override;
     Payload receive_message() override;
+    Payload deserialize(const std::string& raw_message) override;
 
 private:
     std::string broker_;
