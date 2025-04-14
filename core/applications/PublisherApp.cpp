@@ -1,6 +1,5 @@
 #include "PublisherApp.hpp"
 #include "cstdlib"
-#include "TechnologyLoader.hpp"
 
 template<typename T>
 T from_string(const std::string& str, T default_value) {
@@ -167,10 +166,16 @@ void PublisherApp::terminate_all_topics(){
 void PublisherApp::run() {
     console.log_study("Initializing");
     publisher->initialize();
-    // wait for consumer to start and connect, and to synchronize with metrics gathering
     int sleep_time = 4000; // milliseconds
-    console.log_study("Initialized," + std::to_string(sleep_time));
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+    std::string technology = std::getenv("TECHNOLOGY");
+    if (technology.find("p2p") != std::string::npos) {
+        // wait for consumer to connect before starting to send messages
+        console.log_study("Initialized," + std::to_string(sleep_time));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+    } else {
+        // brokered technologies do not need this
+        console.log_study("Initialized,0");
+    }
 
     if (message_count > 0) {
         console.log_study("Goal: " + std::to_string(message_count) 

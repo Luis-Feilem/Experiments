@@ -3,7 +3,9 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
 #include <fstream>
+#include <chrono>
 
 #include "Logger.hpp"
 #include "ConsumerFactory.hpp"

@@ -22,8 +22,16 @@ void ConsumerApp::create_consumer() {
 void ConsumerApp::run() {
     console.log_study("Initializing");
     consumer->initialize();
-    console.log_study("Initialized");
-
+    int sleep_time = 4000; // milliseconds
+    std::string technology = std::getenv("TECHNOLOGY");
+    if (technology.find("p2p") == std::string::npos) {
+        // wait for publisher to send the first message and the broker to create the topic
+        console.log_study("Initialized," + std::to_string(sleep_time));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+    } else {
+        // p2p technologies do not need this, as they are not brokered
+        console.log_study("Initialized,0");
+    }
     while (true) {
         console.log_debug("[ConsumerApp] Waiting for message...");
         Payload message = consumer->receive_message();
