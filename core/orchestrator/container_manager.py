@@ -14,6 +14,10 @@ class ContainerManager:
             self.network_name = network_name
         self.topics_map = {}
         
+    def reset_between_experiments(self):
+        self.topics_map = {}
+        self.containers = []
+        
     def topics_and_publishers_lists(self, topic_filter):
         topics_list = []
         publishers_list = []
@@ -53,7 +57,7 @@ class ContainerManager:
         return wrapper
         
     # @return_container_ids
-    def start_publisher(self, tech_name, pub_id, topics, pub_rate, n_messages=None, duration=None, paused = True, mode = None):
+    def start_publisher(self, tech_name, pub_id, topics, pub_rate, message_size, n_messages=None, duration=None, paused = True, mode = None):
         if (n_messages is None and duration is None) or (n_messages is not None and duration is not None):
             raise ValueError("One and only one of 'n_messages' and 'duration' must be passed.")
         print(f"[CM] Starting publisher {pub_id} on topics {topics} using {tech_name}")
@@ -68,7 +72,7 @@ class ContainerManager:
                 "MESSAGES": n_messages,
                 "DURATION": duration,
                 "UPDATE_EVERY": pub_rate,
-                "PAYLOAD_SIZE": 100, # TODO read msg size from config
+                "PAYLOAD_SIZE": message_size,
                 "PAYLOAD_SAMPLES": 5, # can be hardcoded for now?
                 "PAYLOAD_KIND": "FLAT", # TODO read payload kind from config
             }

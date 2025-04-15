@@ -43,6 +43,7 @@ class BenchmarkManager:
             self.tm = None
 
     def execute_experiment(self, tech_name, scenario_config, mode = None):
+        self.cm.reset_between_experiments()
         print(f"[BM] Setting up {tech_name} extra resources...")
         self.tm.setup_tech()
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)

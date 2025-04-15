@@ -71,8 +71,9 @@ class ScenarioManager:
                 "pub_id": f"P{pub_id}", 
                 "topics": [str(i) for i in topics],
                 "pub_rate": self.producer_rate,
+                "message_size": self.message_size,
                 "n_messages": self.number_of_messages,
-                "duration": self.duration
+                "duration": self.duration,
             }
             print(f"[SM]: config for publisher {f'P{pub_id}'}: {pub_configs[pub_id]}")
         print(f"[SM]: pub_configs: {pub_configs}")

@@ -20,13 +20,17 @@ KafkaPublisher::~KafkaPublisher() {
 
     for (auto& [topic, handle] : topic_handles_) {
         console.log_debug("[Kafka Publisher] Destroying topic handle for: " + topic);
-        rd_kafka_topic_destroy(handle);
+        destroy_topic_handle(topic);
         console.log_debug("[Kafka Publisher] Topic handle for '" + topic + "' has been destroyed");
     }
     console.log_debug("[Kafka Publisher] Destroyed topic handles");
     topic_handles_.clear();
 
     if (producer_) {
+        console.log_debug("[Kafka Publisher] Polling before flush...");
+        while (rd_kafka_outq_len(producer_) > 0) {
+            rd_kafka_poll(producer_, 100);  // wait up to 100ms
+        }
         console.log_debug("[Kafka Publisher] Flushing");
         rd_kafka_flush(producer_, 10 * 1000);  // Wait for delivery
         console.log_debug("[Kafka Publisher] Destroying");
@@ -49,6 +53,13 @@ void KafkaPublisher::initialize() {
     conf_ = rd_kafka_conf_new();
 
     rd_kafka_conf_set_log_cb(conf_, kafka_log_callback);
+    rd_kafka_conf_set_dr_msg_cb(conf_, [](rd_kafka_t*, const rd_kafka_message_t* rkmessage, void*) {
+        if (rkmessage->err) {
+            std::cerr << "[Kafka Publisher] Delivery failed: " << rd_kafka_err2str(rkmessage->err) << std::endl;
+        } else {
+            std::cerr << "[Kafka Publisher] Delivered message of " << rkmessage->len << " bytes" << std::endl;
+        }
+    });
 
     if (rd_kafka_conf_set(conf_, "bootstrap.servers", broker_.c_str(), errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
         throw std::runtime_error("Failed to set bootstrap.servers: " + std::string(errstr));
@@ -96,7 +107,7 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
 
     rd_kafka_topic_t* topic_handle = get_or_create_topic_handle(topic);
     if (!topic_handle) {
-        console.log_error("Failed to obtain topic handle for " + topic);
+        console.log_error("[Kafka Publisher] Failed to obtain topic handle for " + topic);
         return;
     }
 
@@ -110,16 +121,17 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
         nullptr, 0,                                              // key
         nullptr                                                  // msg_opaque
     );
+    rd_kafka_poll(producer_, 0);
 
     if (err != 0) {
-        console.log_error("Produce failed: " + std::string(rd_kafka_err2str(rd_kafka_last_error())));
+        console.log_error("[Kafka Publisher] Produce failed: " + std::string(rd_kafka_err2str(rd_kafka_last_error())));
     } else {
-        console.log_debug("Message queued for topic: " + topic);
+        console.log_debug("[Kafka Publisher] Message queued for topic: " + topic);
     }
     // If message is end-of-stream, destroy the topic handle now
     if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
-        console.log_info("Received termination signal — destroying topic handle for: " + topic);
-        rd_kafka_topic_destroy(topic_handle);
+        console.log_info("[Kafka Publisher] Received termination signal — destroying topic handle for: " + topic);
+        destroy_topic_handle(topic);
     }
 }
 
@@ -131,12 +143,12 @@ inline rd_kafka_topic_t* KafkaPublisher::get_or_create_topic_handle(const std::s
 
     rd_kafka_topic_t* handle = rd_kafka_topic_new(producer_, topic.c_str(), nullptr);
     if (!handle) {
-        console.log_error("Failed to create topic handle for: " + topic);
+        console.log_error("[Kafka Publisher] Failed to create topic handle for: " + topic);
         return nullptr;
     }
 
     topic_handles_[topic] = handle;
-    console.log_debug("Created new topic handle for: " + topic);
+    console.log_debug("[Kafka Publisher] Created new topic handle for: " + topic);
     return handle;
 }
 
@@ -145,6 +157,6 @@ inline void KafkaPublisher::destroy_topic_handle(const std::string& topic) {
     if (it != topic_handles_.end()) {
         rd_kafka_topic_destroy(it->second);
         topic_handles_.erase(it);
-        console.log_debug("Destroyed topic handle for: " + topic);
+        console.log_debug("[Kafka Publisher] Destroyed topic handle for: " + topic);
     }
 }
