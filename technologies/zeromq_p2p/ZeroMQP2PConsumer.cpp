@@ -79,7 +79,6 @@ void ZeroMQP2PConsumer::initialize() {
     console.log_debug("[ZeroMQP2P Consumer] initializing...");
     const char* vendpoint = std::getenv("CONSUMER_ENDPOINT");
     const char* vtopics = std::getenv("TOPICS");
-    std::set<std::string> unique_publishers;
     std::string consumer_id = std::getenv("CONTAINER_ID");
     if (!vendpoint) {
         unique_publishers.insert("zeromq_p2p-P" + consumer_id.substr(1));
@@ -123,6 +122,7 @@ void ZeroMQP2PConsumer::initialize() {
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Consumer] Initialization failed: " + std::string(e.what()));
     }
+    log_configuration();
 }
 
 void ZeroMQP2PConsumer::subscribe(const std::string &topic) {
@@ -182,4 +182,29 @@ Payload ZeroMQP2PConsumer::receive_message() {
         console.log_error("[ZeroMQP2P Consumer] Receive failed: " + std::string(e.what()));
         return message;
     }
+}
+
+void ZeroMQP2PConsumer::log_configuration(){
+    console.log_info("[CONFIG_BEGIN]" );
+
+    console.log_info("[CONFIG] socket_type=ZMQ_SUB" ); // Adjust if needed
+    console.log_info("[CONFIG] socket_id=" + std::to_string(subscriber.get(zmq::sockopt::fd)) );
+    console.log_info("[CONFIG] endpoint=" + std::string(std::getenv("CONSUMER_ENDPOINT")) );
+    console.log_info("[CONFIG] topics=" + std::string(std::getenv("TOPICS")) );
+    int hwm, linger, rcv_timeout;
+    size_t sz = sizeof(int);
+
+    zmq_getsockopt(subscriber, ZMQ_RCVHWM, &hwm, &sz);
+    zmq_getsockopt(subscriber, ZMQ_LINGER, &linger, &sz);
+    zmq_getsockopt(subscriber, ZMQ_RCVTIMEO, &rcv_timeout, &sz);
+
+    console.log_info("[CONFIG] ZMQ_RCVHWM=" + std::to_string(hwm) );
+    console.log_info("[CONFIG] ZMQ_LINGER=" + std::to_string(linger) );
+    console.log_info("[CONFIG] ZMQ_RCVTIMEO=" + std::to_string(rcv_timeout) );
+
+    int major, minor, patch;
+    zmq_version(&major, &minor, &patch);
+    console.log_info("[CONFIG] zmq_version=" + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch) );
+
+    console.log_info("[CONFIG_END]" );
 }

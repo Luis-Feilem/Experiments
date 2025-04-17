@@ -11,6 +11,8 @@ private:
     zmq::context_t context;
     zmq::socket_t publisher;
 
+    std::string endpoint;
+
 public:
     ZeroMQP2PPublisher(const Logger& logger);
     ~ZeroMQP2PPublisher();
@@ -20,6 +22,8 @@ public:
 
     std::string serialize(const Payload& message);
     std::string serialize(const Payload& message, std::string topic);
+
+    void log_configuration() override;
 
 protected:
     

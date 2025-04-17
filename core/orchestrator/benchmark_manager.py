@@ -50,6 +50,7 @@ class BenchmarkManager:
         self.tm.setup_tech()
         scenario_name = ScenarioConfigManager.generate_scenario_name(scenario_config)
         metrics = MetricsCollector(tech_name, scenario_name, self.scenario_batch_name, interval=self.interval)
+        os.makedirs(os.path.join("logs", self.scenario_batch_name, tech_name), exist_ok=True)
         try:
             print(f"[BM] Using technology {tech_name} to run scenario {scenario_name} ...")
             print(f"[BM] Starting and pausing all containers in mode {mode}...")
@@ -62,6 +63,10 @@ class BenchmarkManager:
                     mode = mode
                 )
                 #todo save p_config
+                config_file = os.path.join("logs", self.scenario_batch_name, tech_name, f"{scenario_name}_{container}_scenarioconfig.json")
+                with open(config_file, 'w', encoding='utf-8') as f:
+                    json.dump(p_config, f, indent=4)
+                    print(f"[BM] Publisher {container} started with config {p_config}")
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Publisher {pub_config['id']} failed to start correctly.")
 
@@ -72,7 +77,10 @@ class BenchmarkManager:
                     **c_config, 
                     mode = mode
                 )
-                #todo save c_config
+                config_file = os.path.join("logs", self.scenario_batch_name, tech_name, f"{scenario_name}_{container}_scenarioconfig.json")
+                with open(config_file, 'w', encoding='utf-8') as f:
+                    json.dump(c_config, f, indent=4)
+                    print(f"[BM] Consumer {container} started with config {c_config}")
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
             
@@ -92,7 +100,7 @@ class BenchmarkManager:
         finally:
             print("[BM] Cleaning up...")
             self.cm.stop_all()
-            self.cm.remove_all()
+            # self.cm.remove_all()
             print("[BM] Producer and Consumer containers removed")
             self.tm.teardown_tech()
             print(f"[BM] Teardown completed for {tech_name}")

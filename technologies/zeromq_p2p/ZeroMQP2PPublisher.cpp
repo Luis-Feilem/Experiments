@@ -52,7 +52,6 @@ ZeroMQP2PPublisher::~ZeroMQP2PPublisher() {
 void ZeroMQP2PPublisher::initialize() {
     console.log_debug("[ZeroMQP2P Publisher] initializing");
     const char* vendpoint = std::getenv("PUBLISHER_ENDPOINT");
-    std::string endpoint = "";
     if (!vendpoint) {
         console.log_debug("[ZeroMQP2P Publisher] PUBLISHER_ENDPOINT not set, default to 0.0.0.0");
         // throw std::runtime_error("PUBLISHER_ENDPOINT environment variable not set.");
@@ -69,6 +68,7 @@ void ZeroMQP2PPublisher::initialize() {
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Publisher] Initialization failed: " + std::string(e.what()));
     }
+    log_configuration();
 }
 
 void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic) {
@@ -88,4 +88,29 @@ void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic)
     } catch (const zmq::error_t& e) {
         console.log_error("[ZeroMQP2P Publisher] Send failed: " + std::string(e.what()));
     }
+}
+
+void ZeroMQP2PPublisher::log_configuration(){
+    console.log_info("[CONFIG_BEGIN]");
+
+    console.log_info("[CONFIG] socket_type=ZMQ_PUB");
+    console.log_info("[CONFIG] endpoint=" + endpoint );
+
+    // Common socket options
+    int hwm, linger, snd_timeout;
+    size_t sz = sizeof(int);
+
+    zmq_getsockopt(publisher, ZMQ_SNDHWM, &hwm, &sz);
+    zmq_getsockopt(publisher, ZMQ_LINGER, &linger, &sz);
+    zmq_getsockopt(publisher, ZMQ_SNDTIMEO, &snd_timeout, &sz);
+
+    std::cout << "[CONFIG] ZMQ_SNDHWM=" << hwm << std::endl;
+    std::cout << "[CONFIG] ZMQ_LINGER=" << linger << std::endl;
+    std::cout << "[CONFIG] ZMQ_SNDTIMEO=" << snd_timeout << std::endl;
+
+    int major, minor, patch;
+    zmq_version(&major, &minor, &patch);
+    std::cout << "[CONFIG] zmq_version=" << major << "." << minor << "." << patch << std::endl;
+
+    console.log_info("[CONFIG_END]");
 }

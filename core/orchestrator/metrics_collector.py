@@ -51,12 +51,14 @@ class MetricsCollector:
         containers = self.client.containers.list(filters={"name": f"{self.tech_name}-*"})
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
+            fc = {}
             for container in containers:
                 futures.append(executor.submit(self.collect_metrics_container, container))
+                fc[futures[-1]] = container.name
                 print(f"[MC] Metrics collection started for container: {container.name}")
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    print(f"[MC] Metrics collection completed for container {container.name}: {future.result()}")
+                    print(f"[MC] Metrics collection completed for {fc[future]}: {future.result()}")
                 except Exception as e:
                     print(f"[MC] Error in metrics collection thread: {e} in future {future.__repr__()}")
         print(f"[MC] Metrics collection finished for all containers.")

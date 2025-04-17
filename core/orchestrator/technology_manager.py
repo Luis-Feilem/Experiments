@@ -3,6 +3,7 @@ from typing import Dict, Type
 import importlib
 import os
 import json
+import re
 
 class TechnologyManager (ABC):
     
@@ -23,13 +24,28 @@ class TechnologyManager (ABC):
     def reset_tech(self):
         pass
     
-    @abstractmethod
-    def extract_runtime_container_config(self, container) -> dict:
-        pass
+    def extract_runtime_container_config(self, container):
+        logs = container.logs().decode("utf-8").strip().split("\n")
+        pattern = r'.*\[CONFIG\] (?P<key>[^=]+)=(?P<value>.+)'
+        config = {}
+        inside_block = False
+        for line in logs:
+            if "[CONFIG_BEGIN]" in line:
+                inside_block = True
+                continue
+            if "[CONFIG_END]" in line:
+                break
+            if inside_block:
+                match = re.match(pattern, line)
+                if match:
+                    key = match.group("key").strip()
+                    value = match.group("value").strip()
+                    config[key] = value
+        return config
     
     def save_runtime_container_config(self, container, scenario_config, scenario_name):
         config = self.extract_runtime_container_config(container)
-        config_file = os.path.join("logs", scenario_config, self.tech_name, f"{scenario_name}_{container.name}_config.json")
+        config_file = os.path.join("logs", scenario_config, self.tech_name, f"{scenario_name}_{container.name}_runtimeconfig.json")
         with open(config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=4)
         print(f"[TM] Saved {container.name} config to {config_file}")
