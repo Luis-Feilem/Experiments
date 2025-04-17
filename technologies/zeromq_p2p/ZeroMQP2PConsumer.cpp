@@ -191,16 +191,16 @@ void ZeroMQP2PConsumer::log_configuration(){
     console.log_info("[CONFIG] socket_id=" + std::to_string(subscriber.get(zmq::sockopt::fd)) );
     console.log_info("[CONFIG] endpoint=" + std::string(std::getenv("CONSUMER_ENDPOINT")) );
     console.log_info("[CONFIG] topics=" + std::string(std::getenv("TOPICS")) );
-    int hwm, linger, rcv_timeout;
+    int hwm, linger, rcv_buffer;
     size_t sz = sizeof(int);
 
     zmq_getsockopt(subscriber, ZMQ_RCVHWM, &hwm, &sz);
     zmq_getsockopt(subscriber, ZMQ_LINGER, &linger, &sz);
-    zmq_getsockopt(subscriber, ZMQ_RCVTIMEO, &rcv_timeout, &sz);
+    zmq_getsockopt(subscriber, ZMQ_RCVTIMEO, &rcv_buffer, &sz);
 
     console.log_info("[CONFIG] ZMQ_RCVHWM=" + std::to_string(hwm) );
     console.log_info("[CONFIG] ZMQ_LINGER=" + std::to_string(linger) );
-    console.log_info("[CONFIG] ZMQ_RCVTIMEO=" + std::to_string(rcv_timeout) );
+    console.log_info("[CONFIG] ZMQ_RCVBUF=" + std::to_string(rcv_buffer) );
 
     int major, minor, patch;
     zmq_version(&major, &minor, &patch);
