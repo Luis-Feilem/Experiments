@@ -2,7 +2,7 @@
     "producerAssignmentStrategy": ["round-robin", "random"],
     "consumerAssignmentStrategy": ["round-robin", "shared"],
     "common":{
-        "numProducers": {
+        "numProducersPerTopic": {
             "lower": 1,
             "upper": 100,
             "step": 1,
@@ -31,13 +31,16 @@
         },
         "messageSizeBytes":{
             "lower": 64,
-            "upper": 1048576,
+            "upper": 1048576, up to 100KB
             "step": 2,
-            "step_operator": "*"
+            "step_operator": "*",
+            "midpoint": 1024,
+            "step2": 10,
+            "step_operator2": "*"
         },
-        "producerRatePerMicroSecond":{
+        "producerWaitInMicroSeconds":{
             "lower": 1,
-            "upper": 100000,
+            "upper": 100000, so that at maximum size we have around 50Mbps
             "step": 2,
             "step_operator": "*",
             "midpoint": 1000,

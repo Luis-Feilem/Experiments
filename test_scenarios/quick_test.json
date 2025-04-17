@@ -15,8 +15,8 @@
             "step_operator": "+"
         },
         "numTopics": {
-            "lower": 4,
-            "upper": 4,
+            "lower": 1,
+            "upper": 1,
             "step": 1,
             "step_operator": "+"
         },
@@ -47,14 +47,14 @@
     },
     "exclusive": {
         "testDurationS": {
-            "lower": 10,
-            "upper": 10,
+            "lower": 60,
+            "upper": 60,
             "step": 5,
             "step_operator": "+"
         },
         "numberOfMessages":{
-            "lower": 1000,
-            "upper": 1000,
+            "lower": 100,
+            "upper": 100,
             "step": 1,
             "step_operator": "+"
         }
