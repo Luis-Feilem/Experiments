@@ -4,12 +4,13 @@ import time
 import docker
 import csv
 from datetime import datetime
+import concurrent.futures
 
 class MetricsCollector:
     def __init__(self, tech_name, scenario_name, scenario_config, interval=2.0):
         self.tech_name = tech_name
         self.logs_dir = os.path.join("logs", scenario_config, tech_name)
-        self.log_file = os.path.join(self.logs_dir, f"{scenario_name}_{interval}s.csv")
+        self.log_file = os.path.join(self.logs_dir, f"{scenario_name}")
         self.scenario_name = scenario_name
         self.interval = interval if interval > 2.0 else 2.0
         self.running = False
@@ -19,7 +20,7 @@ class MetricsCollector:
         self.previous_system_cpu = {}
         self.metrics = []
         self.fieldnames = [
-            "timestamp", "container_name", "cpu_usage_ns", "cpu_usage_perc", "memory_usage", 
+            "timestamp", "cpu_usage_ns", "cpu_usage_perc", "memory_usage", 
             "network_rx", "network_tx", "disk_read", "disk_write"
         ]
 
@@ -46,56 +47,71 @@ class MetricsCollector:
         return 0.0
 
     def _collect_metrics(self):
-        num_cpus = self.client.info().get("NCPU", 1)
         print(f"[MC] Starting metrics collection for '{self.tech_name}'...")
+        containers = self.client.containers.list(filters={"name": f"{self.tech_name}-*"})
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for container in containers:
+                futures.append(executor.submit(self.collect_metrics_container, container))
+                print(f"[MC] Metrics collection started for container: {container.name}")
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    print(f"[MC] Metrics collection completed for container {container.name}: {future.result()}")
+                except Exception as e:
+                    print(f"[MC] Error in metrics collection thread: {e} in future {future.__repr__()}")
+        print(f"[MC] Metrics collection finished for all containers.")
+
+            
+
+    def collect_metrics_container(self, container):
+        num_cpus = self.client.info().get("NCPU", 1)
         # Open the file once and keep appending to avoid file locks
-        with open(self.log_file, mode='w', newline='', encoding='utf-8') as file:
+        container_file = self.log_file + f"_{container.name}.csv"
+        nlogs = 0
+        with open(container_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=self.fieldnames)
             writer.writeheader()
-
             while self.running:
                 try:
                     timestamp = datetime.now().isoformat()
-                    containers = self.client.containers.list(filters={"name": f"{self.tech_name}-*"})
-                    for container in containers:
-                        stats = container.stats(stream=False)
+                    stats = container.stats(stream=False)
 
-                        # Collect metrics
-                        cpu_usage_ns = stats.get("cpu_stats", {}).get("cpu_usage", {}).get("total_usage", 0)
-                        system_cpu_usage = stats.get("cpu_stats", {}).get("system_cpu_usage", 0)
-                        memory_usage = stats.get("memory_stats", {}).get("usage", 0)
-                        network_rx = sum(v.get("rx_bytes", 0) for v in stats.get("networks", {}).values())
-                        network_tx = sum(v.get("tx_bytes", 0) for v in stats.get("networks", {}).values())
-                        blkio_stats = stats.get("blkio_stats", {}).get("io_service_bytes_recursive", [])
-                        disk_read = sum(x.get("value", 0) for x in blkio_stats if x.get("op") == "Read")
-                        disk_write = sum(x.get("value", 0) for x in blkio_stats if x.get("op") == "Write")
-                        
-                        # Calculate CPU percentage
-                        cpu_usage_perc = self._calculate_cpu_percent(container.id, cpu_usage_ns, system_cpu_usage, num_cpus)
-                        self.previous_cpu[container.id] = cpu_usage_ns
-                        self.previous_system_cpu[container.id] = system_cpu_usage
+                    # Collect metrics
+                    cpu_usage_ns = stats.get("cpu_stats", {}).get("cpu_usage", {}).get("total_usage", 0)
+                    system_cpu_usage = stats.get("cpu_stats", {}).get("system_cpu_usage", 0)
+                    memory_usage = stats.get("memory_stats", {}).get("usage", 0)
+                    network_rx = sum(v.get("rx_bytes", 0) for v in stats.get("networks", {}).values())
+                    network_tx = sum(v.get("tx_bytes", 0) for v in stats.get("networks", {}).values())
+                    blkio_stats = stats.get("blkio_stats", {}).get("io_service_bytes_recursive", [])
+                    disk_read = sum(x.get("value", 0) for x in blkio_stats if x.get("op") == "Read")
+                    disk_write = sum(x.get("value", 0) for x in blkio_stats if x.get("op") == "Write")
+                    
+                    # Calculate CPU percentage
+                    cpu_usage_perc = self._calculate_cpu_percent(container.id, cpu_usage_ns, system_cpu_usage, num_cpus)
+                    self.previous_cpu[container.id] = cpu_usage_ns
+                    self.previous_system_cpu[container.id] = system_cpu_usage
 
-                        # Write row to CSV
-                        writer.writerow({
-                            "timestamp": timestamp,
-                            "container_name": container.name,
-                            "cpu_usage_ns": cpu_usage_ns,
-                            "cpu_usage_perc": cpu_usage_perc,
-                            "memory_usage": memory_usage,
-                            "network_rx": network_rx,
-                            "network_tx": network_tx,
-                            "disk_read": disk_read,
-                            "disk_write": disk_write
-                        })
-                except TypeError:
-                    print(f"[MC] Containers list empty at {timestamp}")
-                    self.running = False
+                    # Write row to CSV
+                    writer.writerow({
+                        "timestamp": timestamp,
+                        "cpu_usage_ns": cpu_usage_ns,
+                        "cpu_usage_perc": cpu_usage_perc,
+                        "memory_usage": memory_usage,
+                        "network_rx": network_rx,
+                        "network_tx": network_tx,
+                        "disk_read": disk_read,
+                        "disk_write": disk_write
+                    })
+                except TypeError as e:
+                    return f"TypeError after {nlogs}  logs. Probably the container is not running: {e}"
                 except Exception as e:
-                    print(f"[MC] Error while collecting metrics: {e}")
-                    self.running = False
+                    return (f"Error while collecting metrics: {e}")
                 
                 print(f"[MC] Metrics collected at {timestamp}, waiting for {self.interval}s...")
                 time.sleep(self.interval)
+                nlogs += 1
+        return f"{nlogs} logs collected"
+
 
     def stop(self):
         """Stop the background thread and save metrics to file."""

@@ -22,13 +22,13 @@ class BenchmarkManager:
         self.cm = ContainerManager()
         self.tm = None
 
-    def run(self, mode = None):
+    def run(self, mode = None, duration_messages = None):
         for scenario_batch in self.config['scenario_batch']:
-            self.run_config(scenario_batch, mode)
+            self.run_config(scenario_batch, mode, duration_messages = duration_messages)
     
-    def run_config(self, scenario_batch, mode = None):
+    def run_config(self, scenario_batch, mode = None, duration_messages = "md"):
         self.scm = ScenarioConfigManager(os.path.join(SCENARIOS_DIR, scenario_batch))
-        self.scenario_batch_name = scenario_batch.split("json")[0]
+        self.scenario_batch_name = scenario_batch.split(".json")[0]
         print(f"[BM] Using scenario_config from {self.scenario_batch_name}")
         technologies = self.config['technologies']
         for tech_name in technologies:
@@ -36,10 +36,12 @@ class BenchmarkManager:
             if not self.tm.validate_technology():
                 raise ValueError(f"Invalid technology: {tech_name}")
             print(f"[BM] Running experiments for technology {tech_name} in mode {mode}...")
-            for scenario_messages in self.scm.iter_valid_combinations(EXCLUSIVE_MSG):
-                self.execute_experiment(tech_name, scenario_messages, mode)
-            for scenario_time in self.scm.iter_valid_combinations(EXCLUSIVE_TIME):
-                self.execute_experiment(tech_name, scenario_time, mode)
+            if "m" in duration_messages:
+                for scenario_messages in self.scm.iter_valid_combinations(EXCLUSIVE_MSG):
+                    self.execute_experiment(tech_name, scenario_messages, mode)
+            if "d" in duration_messages:
+                for scenario_time in self.scm.iter_valid_combinations(EXCLUSIVE_TIME):
+                    self.execute_experiment(tech_name, scenario_time, mode)
             self.tm = None
 
     def execute_experiment(self, tech_name, scenario_config, mode = None):

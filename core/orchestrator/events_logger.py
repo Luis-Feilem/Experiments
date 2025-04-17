@@ -51,6 +51,8 @@ class ContainerEventsLogger:
         print(f"[EL] Logs saved to {self.log_file}")
 
     def _parse_log(self, log_line, container_name):
+        if not self.log_level in log_line:
+            return None
         try:
             timestamp_part, rest = log_line.split(f"[{self.log_level}]", 1)
             timestamp = timestamp_part.strip()
