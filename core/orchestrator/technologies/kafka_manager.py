@@ -1,6 +1,7 @@
 import docker
 import uuid
 import time
+import re
 from confluent_kafka.admin import AdminClient, NewTopic
 import concurrent.futures
 
@@ -121,3 +122,23 @@ class KafkaManager(TechnologyManager):
                 print(f"[KM] Deleted topic: {topic}")
             except Exception as e:
                 print(f"[KM] Failed to delete topic {topic}: {e}")
+                
+    def extract_runtime_container_config(self, container):
+        logs = container.logs().decode("utf-8").strip().split("\n")
+        pattern = r'.*\[CONFIG\] (?P<key>[^=]+)=(?P<value>.+)'
+        config = {}
+        inside_block = False
+        for line in logs:
+            if "[CONFIG_BEGIN]" in line:
+                inside_block = True
+                continue
+            if "[CONFIG_END]" in line:
+                break
+            if inside_block:
+                match = re.match(pattern, line)
+                if match:
+                    key = match.group("key").strip()
+                    value = match.group("value").strip()
+                    config[key] = value
+                    
+        return config

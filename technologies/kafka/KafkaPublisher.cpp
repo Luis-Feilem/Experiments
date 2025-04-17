@@ -8,6 +8,14 @@ static void kafka_log_callback(const rd_kafka_t* rk, int level,
     std::cerr << "[librdkafka][" << fac << "] " << buf << std::endl;
 }
 
+static void dr_msg_cb(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage, void*) {
+    if (rkmessage->err) {
+        std::cerr << "[Kafka Publisher] Delivery failed: " << rd_kafka_err2str(rkmessage->err) << std::endl;
+    } else {
+        std::cerr << "[Kafka Publisher] Delivered message '" << rkmessage << "' of " << rkmessage->len << " bytes" << std::endl;
+    }
+}
+
 KafkaPublisher::KafkaPublisher(const Logger& logger)
     try : IPublisher(logger), producer_(nullptr), conf_(nullptr) {
         console.log_info("[Kafka Publisher] KafkaPublisher created.");
@@ -41,6 +49,10 @@ KafkaPublisher::~KafkaPublisher() {
             console.log_debug("[Kafka Publisher] Kafka destroyed cleanly.");
         }
     }
+    if (conf_) {
+        rd_kafka_conf_destroy(conf_);
+        conf_ = nullptr;
+    }
     console.log_debug("[Kafka Publisher] Kafka destructor finished.");
 }
 
@@ -53,24 +65,21 @@ void KafkaPublisher::initialize() {
     conf_ = rd_kafka_conf_new();
 
     rd_kafka_conf_set_log_cb(conf_, kafka_log_callback);
-    rd_kafka_conf_set_dr_msg_cb(conf_, [](rd_kafka_t*, const rd_kafka_message_t* rkmessage, void*) {
-        if (rkmessage->err) {
-            std::cerr << "[Kafka Publisher] Delivery failed: " << rd_kafka_err2str(rkmessage->err) << std::endl;
-        } else {
-            std::cerr << "[Kafka Publisher] Delivered message of " << rkmessage->len << " bytes" << std::endl;
-        }
-    });
+    rd_kafka_conf_set_dr_msg_cb(conf_, dr_msg_cb);
 
     if (rd_kafka_conf_set(conf_, "bootstrap.servers", broker_.c_str(), errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
         throw std::runtime_error("Failed to set bootstrap.servers: " + std::string(errstr));
     }
 
-    if (!(producer_ = rd_kafka_new(RD_KAFKA_PRODUCER, conf_, errstr, sizeof(errstr)))) {
+    rd_kafka_conf_t* snapshot_conf = rd_kafka_conf_dup(conf_);
+
+    if (!(producer_ = rd_kafka_new(RD_KAFKA_PRODUCER, snapshot_conf, errstr, sizeof(errstr)))) {
         throw std::runtime_error("Failed to create producer: " + std::string(errstr));
     }
-    conf_ = nullptr;
+    snapshot_conf = nullptr;
 
     console.log_info("[Kafka Publisher] Publisher initialized successfully.");
+    log_configuration();
 }
 
 std::string KafkaPublisher::serialize(const Payload& payload){
@@ -159,4 +168,17 @@ inline void KafkaPublisher::destroy_topic_handle(const std::string& topic) {
         topic_handles_.erase(it);
         console.log_debug("[Kafka Publisher] Destroyed topic handle for: " + topic);
     }
+}
+
+void KafkaPublisher::log_configuration() {
+    size_t cnt;
+    const char** conf = rd_kafka_conf_dump(conf_, &cnt);
+
+    console.log_info("[Kafka Publisher] [CONFIG_BEGIN]");
+    for (size_t i = 0; i < cnt; i += 2) {
+        console.log_info("[CONFIG] " + std::string(conf[i]) + "=" + std::string(conf[i+1]));
+    }
+    console.log_info("[Kafka Publisher] [CONFIG_END]");
+
+    rd_kafka_conf_dump_free(conf, cnt);
 }

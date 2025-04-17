@@ -13,6 +13,8 @@ class ScenarioManager:
             self.valid = True
 
     def load_config(self):
+        # todo: these functions don't handle errors gracefully
+        # todo: host them here instead of in the config manager? 
         self.producer_strat = ScenarioConfigManager.get_producerAssignmentStrategy(self.scenario)
         self.consumer_strat = ScenarioConfigManager.get_consumerAssignmentStrategy(self.scenario)
         self.num_producers_per_topic = ScenarioConfigManager.get_numProducersPerTopic(self.scenario)

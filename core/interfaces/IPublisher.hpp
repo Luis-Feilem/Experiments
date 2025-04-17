@@ -23,6 +23,9 @@ public:
 
     // Sends a message
     virtual void send_message(const Payload &message, std::string topic) = 0;
+
+    // Log publisher configuration during runtime
+    virtual void log_configuration() = 0;
 };
 
 #endif // IPUBLISHER_HPP

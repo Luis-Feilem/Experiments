@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Type
 import importlib
 import os
+import json
 
 class TechnologyManager (ABC):
     
@@ -21,6 +22,17 @@ class TechnologyManager (ABC):
     @abstractmethod
     def reset_tech(self):
         pass
+    
+    @abstractmethod
+    def extract_runtime_container_config(self, container) -> dict:
+        pass
+    
+    def save_runtime_container_config(self, container, scenario_config, scenario_name):
+        config = self.extract_runtime_container_config(container)
+        config_file = os.path.join("logs", scenario_config, self.tech_name, f"{scenario_name}_{container.name}_config.json")
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4)
+        print(f"[TM] Saved {container.name} config to {config_file}")
             
     def validate_technology(self):
         print(f"[TM] Inspecting files in {self.tech_path}...")

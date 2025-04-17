@@ -30,6 +30,9 @@ public:
     // Receives a message (blocking or non-blocking depending on implementation)
     virtual Payload receive_message() = 0;
 
+    // Log consumer configuration during runtime
+    virtual void log_configuration() = 0;
+
     int get_subscribed_streams_size() const {
         return static_cast<int>(subscribed_streams.size());
     }

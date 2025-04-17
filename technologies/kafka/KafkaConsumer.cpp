@@ -31,6 +31,7 @@ KafkaConsumer::~KafkaConsumer() {
 
     if (conf_) {
         rd_kafka_conf_destroy(conf_);
+        conf_ = nullptr;
     }
 
     if (subscription_list_) {
@@ -77,11 +78,13 @@ void KafkaConsumer::initialize() {
     if (rd_kafka_conf_set(conf_, "auto.offset.reset", "earliest", errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
         throw std::runtime_error("[Kafka Consumer] Failed to set auto.offset.reset: " + std::string(errstr));
     }
-    if (!(consumer_ = rd_kafka_new(RD_KAFKA_CONSUMER, conf_, errstr, sizeof(errstr)))) {
+    rd_kafka_conf_t* snapshot_conf = rd_kafka_conf_dup(conf_);
+
+    if (!(consumer_ = rd_kafka_new(RD_KAFKA_CONSUMER, snapshot_conf, errstr, sizeof(errstr)))) {
         throw std::runtime_error("[Kafka Consumer] Failed to create consumer: " + std::string(errstr));
     }
     // rd_kafka_conf_destroy(conf_);
-    conf_ = nullptr;
+    snapshot_conf = nullptr;
 
     rd_kafka_poll_set_consumer(consumer_);
 
@@ -121,6 +124,7 @@ void KafkaConsumer::initialize() {
     initialized_ = true;
 
     console.log_info("[Kafka Consumer] Consumer initialized and subscribed.");
+    log_configuration();
 }
 
 
@@ -209,4 +213,16 @@ Payload KafkaConsumer::receive_message() {
 
     rd_kafka_message_destroy(msg);
     return payload;
+}
+
+void KafkaConsumer::log_configuration() {
+    size_t cnt;
+    const char** conf = rd_kafka_conf_dump(conf_, &cnt);
+    console.log_info("[Kafka Consumer] [CONFIG_BEGIN]");
+    for (size_t i=0; i < cnt; i+=2) {
+        console.log_info("[CONFIG] " + std::string(conf[i]) + " = " + std::string(conf[i+1]));
+    }
+    console.log_info("[Kafka Consumer] [CONFIG_END]");
+
+    rd_kafka_conf_dump_free(conf, cnt);
 }

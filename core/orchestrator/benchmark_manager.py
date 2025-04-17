@@ -56,25 +56,27 @@ class BenchmarkManager:
             sm = ScenarioManager(scenario_config)
             for p_id, p_config in sm.publisher_configs().items():
                 print(f"[BM] starting publisher with config {p_config}")
-                container_id = self.cm.start_publisher(
+                container = self.cm.start_publisher(
                     tech_name = tech_name,
                     **p_config,
                     mode = mode
                 )
+                #todo save p_config
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Publisher {pub_config['id']} failed to start correctly.")
 
             for c_id, c_config in sm.consumer_configs().items():
                 print(f"[BM] starting consumer with config {c_config}")
-                container_id = self.cm.start_consumer(
+                container = self.cm.start_consumer(
                     tech_name, 
                     **c_config, 
                     mode = mode
                 )
+                #todo save c_config
                 # if not container_manager.is_healthy(container_id):
                 #     raise ValueError(f"Consumer {sub_config['id']} failed to start correctly.")
             
-            metrics.start()    
+            metrics.start()
             print("[BM] All containers started. Unpausing...")
             self.cm.wake_all()
             print("[BM] All containers running...")
@@ -83,6 +85,9 @@ class BenchmarkManager:
             events_logger = ContainerEventsLogger(tech_name, scenario_name, self.scenario_batch_name)
             events_logger.collect_logs()
             events_logger.write_logs()
+            for container in self.cm.containers:
+                if "broker" not in container.name:
+                    self.tm.save_runtime_container_config(container, self.scenario_batch_name, scenario_name)
 
         finally:
             print("[BM] Cleaning up...")
