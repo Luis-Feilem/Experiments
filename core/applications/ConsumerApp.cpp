@@ -20,17 +20,17 @@ void ConsumerApp::create_consumer() {
 
 // Initializes and runs the consumer logic
 void ConsumerApp::run() {
-    console.log_study("Initializing");
+    console.log_info("[ConsumerApp] Initializing");
     consumer->initialize();
     int sleep_time = 4000; // milliseconds
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology.find("p2p") == std::string::npos) {
         // wait for publisher to send the first message and the broker to create the topic
-        console.log_study("Initialized," + std::to_string(sleep_time));
+        console.log_info("[ConsumerApp] Initialized," + std::to_string(sleep_time));
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     } else {
         // p2p technologies do not need this, as they are not brokered
-        console.log_study("Initialized,0");
+        console.log_info("[ConsumerApp] Initialized,0");
     }
     while (true) {
         console.log_debug("[ConsumerApp] Waiting for message...");
@@ -40,13 +40,13 @@ void ConsumerApp::run() {
             continue;
         }
         if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
-            console.log_study("Termination," + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
+            console.log_info("[ConsumerApp] Termination," + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
             if (consumer->get_terminated_streams_size() >= consumer->get_subscribed_streams_size()) {
                 break; // All streams terminated
             }
             continue;
         }
-        console.log_study("Update," + message.message_id + "," + std::to_string(message.data_size));
+        console.log_info("[ConsumerApp] Update," + message.message_id + "," + std::to_string(message.data_size));
     }
 }
 

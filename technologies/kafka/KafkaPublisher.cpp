@@ -8,11 +8,23 @@ static void kafka_log_callback(const rd_kafka_t* rk, int level,
     std::cerr << "[librdkafka][" << fac << "] " << buf << std::endl;
 }
 
-static void dr_msg_cb(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage, void*) {
+std::string extract_message_id(const rd_kafka_message_t* msg) {
+    return std::string(static_cast<const char*>(msg->key), msg->key_len);
+}
+
+void dr_msg_cb(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage, void* /*opaque*/) {
+    Logger* logger = static_cast<Logger*>(rd_kafka_opaque(rk));
+
     if (rkmessage->err) {
-        std::cerr << "[Kafka Publisher] Delivery failed: " << rd_kafka_err2str(rkmessage->err) << std::endl;
+        logger->log_study("DeliveryError," + extract_message_id(rkmessage) + 
+                          "," + std::to_string(rkmessage->len) + 
+                          ",-1," +
+                          rd_kafka_topic_name(rkmessage->rkt));
     } else {
-        std::cerr << "[Kafka Publisher] Delivered message '" << rkmessage << "' of " << rkmessage->len << " bytes" << std::endl;
+        logger->log_study("Publication," + extract_message_id(rkmessage) + 
+                          "," + std::to_string(rkmessage->len) +  
+                          "," + rd_kafka_topic_name(rkmessage->rkt) + 
+                          "," + std::to_string(rkmessage->len));
     }
 }
 
@@ -57,6 +69,7 @@ KafkaPublisher::~KafkaPublisher() {
 }
 
 void KafkaPublisher::initialize() {
+    console.log_study("Initializing");
     const char* vendpoint = std::getenv("PUBLISHER_ENDPOINT");
     broker_ = vendpoint ? std::string(vendpoint) + ":9092" : "localhost:9092";
     console.log_info("[Kafka Publisher] Using broker: " + broker_);
@@ -66,6 +79,7 @@ void KafkaPublisher::initialize() {
 
     rd_kafka_conf_set_log_cb(conf_, kafka_log_callback);
     rd_kafka_conf_set_dr_msg_cb(conf_, dr_msg_cb);
+    rd_kafka_conf_set_opaque(conf_, static_cast<void*>(&console));
 
     if (rd_kafka_conf_set(conf_, "bootstrap.servers", broker_.c_str(), errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
         throw std::runtime_error("Failed to set bootstrap.servers: " + std::string(errstr));
@@ -78,7 +92,7 @@ void KafkaPublisher::initialize() {
     }
     snapshot_conf = nullptr;
 
-    console.log_info("[Kafka Publisher] Publisher initialized successfully.");
+    console.log_study("Initialized");
     log_configuration();
 }
 
@@ -112,6 +126,7 @@ std::string KafkaPublisher::serialize(const Payload& payload){
 }
 
 void KafkaPublisher::send_message(const Payload& message, std::string topic) {
+    console.log_study("Intention," + message.message_id + "," + std::to_string(message.data_size) + "," + topic);
     std::string serialized = serialize(message);
 
     rd_kafka_topic_t* topic_handle = get_or_create_topic_handle(topic);
@@ -127,8 +142,8 @@ void KafkaPublisher::send_message(const Payload& message, std::string topic) {
         RD_KAFKA_MSG_F_COPY,                                    // copy payload
         const_cast<char*>(serialized.data()),                   // payload ptr
         serialized.size(),                                      // payload len
-        nullptr, 0,                                              // key
-        nullptr                                                  // msg_opaque
+        message.message_id.c_str(), message.message_id.size(),   // key
+        nullptr                                                 // msg_opaque
     );
     rd_kafka_poll(producer_, 0);
 

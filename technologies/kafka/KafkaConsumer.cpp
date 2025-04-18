@@ -53,6 +53,7 @@ void KafkaConsumer::subscribe(const std::string& topic) {
 }
 
 void KafkaConsumer::initialize() {
+    console.log_study("Initializing");
     if (initialized_) {
         console.log_error("[Kafka Consumer] Kafka Consumer already initialized.");
         return;
@@ -124,6 +125,7 @@ void KafkaConsumer::initialize() {
     initialized_ = true;
 
     console.log_info("[Kafka Consumer] Consumer initialized and subscribed.");
+    console.log_study("Initialized");
     log_configuration();
 }
 
@@ -181,13 +183,13 @@ Payload KafkaConsumer::receive_message() {
         console.log_debug("[Kafka Consumer] Poll returned null message");
         return {};
     }
+    std::string topic = msg->rkt ? rd_kafka_topic_name(msg->rkt) : "unknown";
 
     Payload payload = {};
     if (msg->err) {
         console.log_error("[Kafka Consumer] Kafka error: " + std::string(rd_kafka_message_errstr(msg)));
     } 
     else if (msg->len > 0) {
-        std::string topic = rd_kafka_topic_name(msg->rkt);
         console.log_info("[Kafka Consumer] Received message on topic '" + topic + "' with " + std::to_string(msg->len) + " bytes");
         // payload = deserialize_payload(std::string(static_cast<const char*>(msg->payload), msg->len));
         try {
@@ -206,6 +208,10 @@ Payload KafkaConsumer::receive_message() {
             payload = Payload::make(payload.message_id.substr(0, payload.message_id.find(':')) + "-" + topic, 
                                     0, 0, PayloadKind::TERMINATION);
         }
+        console.log_study("Reception," + payload.message_id + 
+            "," + std::to_string(payload.data_size) + 
+            "," + topic +
+            "," + std::to_string(msg->len));
     }
     else{
         console.log_error("[Kafka Consumer] Unknown msg handling condition");

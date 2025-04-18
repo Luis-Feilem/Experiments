@@ -127,11 +127,11 @@ void PublisherApp::create_publisher() {
 void PublisherApp::publish_on_topic(std::string topic, int i){
     const Payload& base = pick_random_payload();
     Payload message = Payload::reuse_with_new_id(id, i, base.data, base.kind);
-    console.log_study("Publishing," + std::to_string(i) + 
+    console.log_info("[PublisherApp] Publishing," + std::to_string(i) + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);
     publisher->send_message(message, topic);
-    console.log_study("Published," + std::to_string(i) + 
+    console.log_info("[PublisherApp] Published," + std::to_string(i) + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);
 }
@@ -149,9 +149,9 @@ void PublisherApp::publish_on_all_topics(int i){
 }
 
 void PublisherApp::terminate_topic(std::string topic){
-    console.log_study("Closing," + topic);
+    console.log_info("[PublisherApp] Closing," + topic);
     publisher->send_message(generate_termination_message(), topic);
-    console.log_study("Closed," + topic);
+    console.log_info("[PublisherApp] Closed," + topic);
 }
 
 void PublisherApp::terminate_all_topics(){
@@ -164,27 +164,27 @@ void PublisherApp::terminate_all_topics(){
 
 // Runs the publisher logic (can now be fully generalized)
 void PublisherApp::run() {
-    console.log_study("Initializing");
+    console.log_info("[PublisherApp] Initializing");
     publisher->initialize();
     int sleep_time = 4000; // milliseconds
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology.find("p2p") != std::string::npos) {
         // wait for consumer to connect before starting to send messages
-        console.log_study("Initialized," + std::to_string(sleep_time));
+        console.log_info("[PublisherApp] Initialized," + std::to_string(sleep_time));
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     } else {
         // brokered technologies do not need this
-        console.log_study("Initialized,0");
+        console.log_info("[PublisherApp] Initialized,0");
     }
 
     if (message_count > 0) {
-        console.log_study("Goal: " + std::to_string(message_count) 
+        console.log_info("[PublisherApp] Goal: " + std::to_string(message_count) 
             + " messages," + std::to_string(update_every) + " us"
         );
         run_messages();
     }
     else if (duration > 0) {
-        console.log_study("Goal: " + std::to_string(duration) 
+        console.log_info("[PublisherApp] Goal: " + std::to_string(duration) 
             + " seconds," + std::to_string(update_every) + " us"
         );
         run_duration();
@@ -193,9 +193,9 @@ void PublisherApp::run() {
         console.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive values. No messages are sent.");
     }
     // Send termination signal (poison pill)
-    console.log_study("Terminating");	
+    console.log_info("[PublisherApp] Terminating");	
     terminate_all_topics();
-    console.log_study("Terminated");
+    console.log_info("[PublisherApp] Terminated");
 }
 
 void PublisherApp::run_messages(){

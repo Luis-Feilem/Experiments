@@ -50,7 +50,7 @@ ZeroMQP2PPublisher::~ZeroMQP2PPublisher() {
 }
 
 void ZeroMQP2PPublisher::initialize() {
-    console.log_debug("[ZeroMQP2P Publisher] initializing");
+    console.log_study("Initializing");
     const char* vendpoint = std::getenv("PUBLISHER_ENDPOINT");
     if (!vendpoint) {
         console.log_debug("[ZeroMQP2P Publisher] PUBLISHER_ENDPOINT not set, default to 0.0.0.0");
@@ -68,10 +68,12 @@ void ZeroMQP2PPublisher::initialize() {
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Publisher] Initialization failed: " + std::string(e.what()));
     }
+    console.log_study("Initialized");
     log_configuration();
 }
 
 void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic) {
+    console.log_study("Intention," + message.message_id + "," + std::to_string(message.data_size) + "," + topic);
     try {
         std::string raw = serialize(message, topic);
 
@@ -80,13 +82,14 @@ void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic)
 
         zmq::message_t zmq_message(raw.begin(), raw.end());
         publisher.send(zmq_message, zmq::send_flags::none);
-
-        console.log_info("[ZeroMQP2P Publisher] Sent " + std::to_string(zmq_message.size()) +
-                         " B on topic " + topic);
+        console.log_study("Publication," + message.message_id + 
+                          "," + std::to_string(message.data_size) + 
+                          "," + topic +
+                          "," + std::to_string(zmq_message.size()));
         console.log_debug("[ZeroMQP2P Publisher] Socket connected clients: " + publisher.get(zmq::sockopt::events));
 
     } catch (const zmq::error_t& e) {
-        console.log_error("[ZeroMQP2P Publisher] Send failed: " + std::string(e.what()));
+        console.log_study("DeliveryError" + message.message_id + "," + std::to_string(message.data_size) + "," + topic);
     }
 }
 

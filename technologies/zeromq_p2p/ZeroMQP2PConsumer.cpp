@@ -76,7 +76,7 @@ ZeroMQP2PConsumer::~ZeroMQP2PConsumer() {
 }
 
 void ZeroMQP2PConsumer::initialize() {
-    console.log_debug("[ZeroMQP2P Consumer] initializing...");
+    console.log_study("Initializing");
     const char* vendpoint = std::getenv("CONSUMER_ENDPOINT");
     const char* vtopics = std::getenv("TOPICS");
     std::string consumer_id = std::getenv("CONTAINER_ID");
@@ -122,6 +122,7 @@ void ZeroMQP2PConsumer::initialize() {
     } catch (const zmq::error_t &e) {
         console.log_error("[ZeroMQP2P Consumer] Initialization failed: " + std::string(e.what()));
     }
+    console.log_study("Initialized");
     log_configuration();
 }
 
@@ -145,24 +146,26 @@ Payload ZeroMQP2PConsumer::receive_message() {
 
         std::string raw(static_cast<const char*>(zmq_message.data()), zmq_message.size());
         message = deserialize(raw);
-
+        // Recover topic from the raw message
+        const char* data = raw.data();
+        size_t offset = 0;
+        // 1. Topic length and content (skip over it)
+        uint8_t topic_len = static_cast<uint8_t>(data[offset]);
+        offset += 1;
+        if (raw.size() < offset + topic_len) {
+            throw std::runtime_error("Invalid message: incomplete topic");
+        }
+        std::string topic(data + offset, topic_len);
         console.log_info("[ZeroMQP2P Consumer] Received message ID: " + message.message_id +
-                         ", Size: " + std::to_string(message.data_size) + " bytes");
+            ", Size: " + std::to_string(message.data_size) + " bytes");
+        console.log_study("Reception," + message.message_id +
+            "," + std::to_string(message.data_size) + 
+            "," + topic + 
+            "," + std::to_string(zmq_message.size()));
 
         // Poison pill handling based on ID
         if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
             std::string source = message.message_id.substr(0, message.message_id.find(":"));
-
-            // Recover topic from the raw message
-            const char* data = raw.data();
-            size_t offset = 0;
-            // 1. Topic length and content (skip over it)
-            uint8_t topic_len = static_cast<uint8_t>(data[offset]);
-            offset += 1;
-            if (raw.size() < offset + topic_len) {
-                throw std::runtime_error("Invalid message: incomplete topic");
-            }
-            std::string topic(data + offset, topic_len);
 
             terminated_streams.insert({source, topic});
 
