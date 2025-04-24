@@ -21,7 +21,7 @@ std::string get_current_timestamp() {
 }
 
 std::string make_message(std::string message){
-    return get_current_timestamp() + "|" + message;
+    return get_current_timestamp() + "," + message;
 }
 
 // Constructor

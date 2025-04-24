@@ -9,19 +9,16 @@ class ContainerEventsLogger:
         self.log_file = os.path.join("logs", scenario_config, tech_name, f"{scenario_name}_events.parquet")
         self.client = docker.from_env()
         self.fieldnames = [
-            "timestamp", 
             "container_name", 
-            "actor", 
-            "message", 
+            "timestamp",
+            "event_type",
+            "message_id",
+            "logical_size",
+            "topic",
+            "serialized_size" 
         ]
         self.separator = separator
         self.logs = []
-        # self.logs_schema = {
-        #     "timestamp": str,
-        #     "container_name": str,
-        #     "actor": str, # optional
-        #     "message": str,
-        # }
         self.log_level = log_level
 
     def collect_logs(self):
@@ -30,7 +27,7 @@ class ContainerEventsLogger:
         print(f"[EL] Collecting logs from {len(containers)} containers...")
         for container in containers:
             try:
-                logs = container.logs(timestamps=True).decode("utf-8").strip().split("\n")
+                logs = container.logs().decode("utf-8").strip().split("\n")
                 for log in logs:
                     # else continue
                     parsed = self._parse_log(log, container.name)
@@ -54,26 +51,22 @@ class ContainerEventsLogger:
         if not self.log_level in log_line:
             return None
         try:
-            timestamp_part, rest = log_line.split(f"[{self.log_level}]", 1)
-            timestamp = timestamp_part.strip()
-
-            # Optional: standardize to ISO format (if needed)
-            # timestamp = datetime.fromisoformat(timestamp).isoformat()
-
-            # Attempt to parse actor + message if present
-            if "]" in rest:
-                actor_part, message = rest.strip().split("]", 1)
-                actor = actor_part.strip("[ ")
-                message = message.strip()
-            else:
-                actor = None
-                message = rest.strip()
-
+            _, log = log_line.split(f"[{self.log_level}]", 1)
+            log_parts = log.strip().split(",")
+            timestamp_part = log_parts[0] if len(log_parts) > 0 else None
+            event_type_part = log_parts[1] if len(log_parts) > 1 else None
+            message_id_part = log_parts[2] if len(log_parts) > 2 else None
+            logical_size_part = log_parts[3] if len(log_parts) > 3 else None
+            topic_part = log_parts[4] if len(log_parts) > 4 else None
+            serialized_size_part = log_parts[5] if len(log_parts) > 5 else None
             return {
-                "timestamp": timestamp,
-                "container_name": container_name,
-                "actor": actor,
-                "message": message
+                "container_name": container_name, 
+                "timestamp": timestamp_part,
+                "event_type": event_type_part,
+                "message_id": message_id_part,
+                "logical_size": logical_size_part,
+                "topic": topic_part,
+                "serialized_size": serialized_size_part,
             }
 
         except Exception as e:

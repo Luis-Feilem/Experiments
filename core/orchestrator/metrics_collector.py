@@ -109,7 +109,7 @@ class MetricsCollector:
                 except Exception as e:
                     return (f"Error while collecting metrics: {e}")
                 
-                print(f"[MC] Metrics collected at {timestamp}, waiting for {self.interval}s...")
+                print(f"[MC] Metrics for {container.name} collected at {timestamp}, waiting for {self.interval}s...")
                 time.sleep(self.interval)
                 nlogs += 1
         return f"{nlogs} logs collected"
@@ -121,5 +121,5 @@ class MetricsCollector:
             print("[MC] Stopping metrics collection...")
             self.running = False
         self.thread.join()
-        print(f"[MC] Metrics saved to {self.log_file}")
+        print(f"[MC] Metrics saved to {self.log_file}_<container_name>.csv")
 

@@ -68,11 +68,12 @@ class ScenarioConfigManager:
         p = ScenarioConfigManager.get_numProducersPerTopic(scenario)
         c = ScenarioConfigManager.get_numConsumers(scenario)
         t = ScenarioConfigManager.get_numTopics(scenario)
-        pc = ScenarioConfigManager.get_parallelSubscriptionsPerTopic(scenario)
+        # pc = ScenarioConfigManager.get_parallelSubscriptionsPerTopic(scenario)
         b = ScenarioConfigManager.get_messageSizeBytes(scenario)
-        w = ScenarioConfigManager.get_producerWaitInMicroSeconds(scenario)
-        bm = ScenarioConfigManager.get_backlogSizeMessages(scenario)
-        name_parts.append(f"{p}p{c}c{t}t{pc}pc{b}b{w}us{bm}bm")
+        # w = ScenarioConfigManager.get_producerWaitInMicroSeconds(scenario)
+        # bm = ScenarioConfigManager.get_backlogSizeMessages(scenario)
+        name_parts.append(f"{p}p{c}c{t}t{b}b")
+        # name_parts.append(f"{p}p{c}c{t}t{pc}pc{b}b{w}us{bm}bm")
 
         # Exclusive mode
         if EXCLUSIVE_TIME in scenario:
@@ -80,12 +81,13 @@ class ScenarioConfigManager:
         elif EXCLUSIVE_MSG in scenario:
             name_parts.append(f"{int(scenario[EXCLUSIVE_MSG])}m")
 
-        # Network-related identifiers
-        bw = ScenarioConfigManager.get_bandwidthMbps(scenario)
-        lat = ScenarioConfigManager.get_latencyMs(scenario)
-        pl = ScenarioConfigManager.get_packetLossPerc(scenario)
-        jit = ScenarioConfigManager.get_jitterMs(scenario)
-        name_parts.append(f"{bw}mbps{lat}ms{pl}pl{jit}j")
+        # todo: not used anymore since we want to test how fast things can go without any meddling
+        # # Network-related identifiers
+        # bw = ScenarioConfigManager.get_bandwidthMbps(scenario)
+        # lat = ScenarioConfigManager.get_latencyMs(scenario)
+        # pl = ScenarioConfigManager.get_packetLossPerc(scenario)
+        # jit = ScenarioConfigManager.get_jitterMs(scenario)
+        # name_parts.append(f"{bw}mbps{lat}ms{pl}pl{jit}j")
 
         return "-".join(name_parts).replace('.','_')
     

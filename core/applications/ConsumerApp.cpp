@@ -59,7 +59,7 @@ int main(int argc, char * argv[]) {
         if (argc >= 2 && argv[1] != nullptr){
             log_level = Logger::string_to_level(argv[1]);
         }
-        std::cout << "[ConsumerApp] Log level: " << Logger::level_to_string(log_level) << std::endl << std::flush;
+        // std::cout << "[ConsumerApp] Log level: " << Logger::level_to_string(log_level) << std::endl << std::flush;
         ConsumerApp app = ConsumerApp(log_level);
         app.create_consumer();
         app.run();
