@@ -94,10 +94,10 @@ void ZeroMQP2PPublisher::send_message(const Payload& message, std::string topic)
 }
 
 void ZeroMQP2PPublisher::log_configuration(){
-    console.log_info("[CONFIG_BEGIN]");
+    console.log_config("[ZeroMQP2P Publisher] [CONFIG_BEGIN]");
 
-    console.log_info("[CONFIG] socket_type=ZMQ_PUB");
-    console.log_info("[CONFIG] endpoint=" + endpoint );
+    console.log_config("[CONFIG] socket_type=ZMQ_PUB");
+    console.log_config("[CONFIG] endpoint=" + endpoint );
 
     // Common socket options
     int hwm, linger, snd_buffer;
@@ -107,13 +107,13 @@ void ZeroMQP2PPublisher::log_configuration(){
     zmq_getsockopt(publisher, ZMQ_LINGER, &linger, &sz);
     zmq_getsockopt(publisher, ZMQ_SNDTIMEO, &snd_buffer, &sz);
 
-    console.log_info("[CONFIG] ZMQ_SNDHWM=" + std::to_string(hwm));
-    console.log_info("[CONFIG] ZMQ_LINGER=" + std::to_string(linger));
-    console.log_info("[CONFIG] ZMQ_SNDBUF=" + std::to_string(snd_buffer));
+    console.log_config("[CONFIG] ZMQ_SNDHWM=" + std::to_string(hwm));
+    console.log_config("[CONFIG] ZMQ_LINGER=" + std::to_string(linger));
+    console.log_config("[CONFIG] ZMQ_SNDBUF=" + std::to_string(snd_buffer));
 
     int major, minor, patch;
     zmq_version(&major, &minor, &patch);
-    console.log_info("[CONFIG] zmq_version=" + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch));
+    console.log_config("[CONFIG] zmq_version=" + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch));
 
-    console.log_info("[CONFIG_END]");
+    console.log_config("[ZeroMQP2P Publisher] [CONFIG_END]");
 }

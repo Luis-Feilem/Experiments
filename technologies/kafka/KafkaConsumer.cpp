@@ -224,11 +224,11 @@ Payload KafkaConsumer::receive_message() {
 void KafkaConsumer::log_configuration() {
     size_t cnt;
     const char** conf = rd_kafka_conf_dump(conf_, &cnt);
-    console.log_info("[Kafka Consumer] [CONFIG_BEGIN]");
+    console.log_config("[Kafka Consumer] [CONFIG_BEGIN]");
     for (size_t i=0; i < cnt; i+=2) {
-        console.log_info("[CONFIG] " + std::string(conf[i]) + " = " + std::string(conf[i+1]));
+        console.log_config("[CONFIG] " + std::string(conf[i]) + " = " + std::string(conf[i+1]));
     }
-    console.log_info("[Kafka Consumer] [CONFIG_END]");
+    console.log_config("[Kafka Consumer] [CONFIG_END]");
 
     rd_kafka_conf_dump_free(conf, cnt);
 }

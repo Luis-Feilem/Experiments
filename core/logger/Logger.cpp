@@ -41,6 +41,7 @@ std::string Logger::level_to_string(Logger::LogLevel level) {
         case Logger::LogLevel::DEBUG: return "DEBUG";
         case Logger::LogLevel::INFO: return "INFO";
         case Logger::LogLevel::STUDY: return "STUDY";
+        case Logger::LogLevel::CONFIG: return "CONFIG";
         case Logger::LogLevel::ERROR: return "ERROR";
         default: return "UNKNOWN";
     }
@@ -59,6 +60,8 @@ Logger::LogLevel Logger::string_to_level(const std::string& level) {
         return Logger::LogLevel::INFO;
     } else if (level == "STUDY") {
         return Logger::LogLevel::STUDY;
+    } else if (level == "CONFIG") {
+        return Logger::LogLevel::CONFIG;
     } else if (level == "ERROR") {
         return Logger::LogLevel::ERROR;
     } else {
@@ -91,6 +94,13 @@ void Logger::log_info(const std::string& message) {
 void Logger::log_study(const std::string& message) {
     if (log_level <= Logger::LogLevel::STUDY) {
         std::cout << "[" << level_to_string(Logger::LogLevel::STUDY) << "] " << make_message(message) << std::endl;
+    }
+}
+
+// Log config messages
+void Logger::log_config(const std::string& message) {
+    if (log_level <= Logger::LogLevel::CONFIG) {
+        std::cout << "[" << level_to_string(Logger::LogLevel::CONFIG) << "] " << make_message(message) << std::endl;
     }
 }
 
