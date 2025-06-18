@@ -1,4 +1,5 @@
 import docker
+import datetime
 import polars as pl
 import os
 
@@ -61,12 +62,12 @@ class ContainerEventsLogger:
             serialized_size_part = log_parts[5] if len(log_parts) > 5 else None
             return {
                 "container_name": container_name, 
-                "timestamp": timestamp_part,
+                "timestamp": datetime.datetime.strptime(timestamp_part, "%Y-%m-%d %H:%M:%S.%f"),
                 "event_type": event_type_part,
                 "message_id": message_id_part,
-                "logical_size": logical_size_part,
+                "logical_size": int(logical_size_part) if serialized_size_part is not None else None,
                 "topic": topic_part,
-                "serialized_size": serialized_size_part,
+                "serialized_size": int(serialized_size_part) if serialized_size_part is not None else None,
             }
 
         except Exception as e:

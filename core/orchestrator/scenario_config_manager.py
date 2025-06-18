@@ -117,7 +117,7 @@ class ScenarioConfigManager:
 
     @staticmethod
     def get_messageSizeBytes(scenario):
-        return scenario['messageSizeBytes']
+        return int(scenario['messageSizeBytes'])
 
     @staticmethod
     def get_producerWaitInMicroSeconds(scenario):
