@@ -12,10 +12,11 @@ public:
 
     void initialize() override;
     void send_message(const Payload& message, std::string topic) override;
-    std::string serialize(const Payload& message) override;
-    void log_configuration() override;
 
 private:
+    std::string serialize(const Payload& message) override;
+    void log_configuration() override;
+    
     rd_kafka_t* producer_;
     rd_kafka_conf_t* conf_;
     std::string broker_;

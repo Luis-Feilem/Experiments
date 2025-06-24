@@ -13,6 +13,13 @@ private:
 
     std::string endpoint;
 
+private:
+
+    std::string serialize(const Payload& message) override;
+    std::string serialize(const Payload& message, std::string topic);
+
+    void log_configuration() override;
+
 public:
     ZeroMQP2PPublisher(const Logger& logger);
     ~ZeroMQP2PPublisher();
@@ -20,13 +27,6 @@ public:
     void initialize() override;
     void send_message(const Payload &message, std::string topic) override;
 
-    std::string serialize(const Payload& message);
-    std::string serialize(const Payload& message, std::string topic);
-
-    void log_configuration() override;
-
-protected:
-    
 };
 
 #endif // ZEROMQ_PUBLISHER_HPP

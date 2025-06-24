@@ -26,6 +26,7 @@ std::string ZeroMQP2PPublisher::serialize(const Payload& message, std::string to
     buffer.insert(buffer.end(), message.message_id.begin(), message.message_id.end());
 
     // 3. Data size
+    //todo: PayloadKind?
     uint64_t data_size = static_cast<uint64_t>(message.data_size);
     buffer.insert(buffer.end(),
                   reinterpret_cast<const char*>(&data_size),
@@ -50,7 +51,7 @@ ZeroMQP2PPublisher::~ZeroMQP2PPublisher() {
 }
 
 void ZeroMQP2PPublisher::initialize() {
-    logger.log_study("Initializing");
+    logger.log_study("[ZeroMQP2P Publisher] Initializing");
     const char* vendpoint = std::getenv("PUBLISHER_ENDPOINT");
     if (!vendpoint) {
         logger.log_debug("[ZeroMQP2P Publisher] PUBLISHER_ENDPOINT not set, default to 0.0.0.0");
