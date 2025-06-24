@@ -17,14 +17,14 @@ protected:
     std::string id;
     std::string topics;
     
-    Logger console;
+    Logger logger;
     Logger::LogLevel log_level;
 
     std::unique_ptr<IConsumer> consumer;
 
 public:
     ConsumerApp(Logger::LogLevel log_level = Logger::LogLevel::INFO)  :
-        log_level(log_level), console(Logger(log_level)){};
+        log_level(log_level), logger(Logger(log_level)){};
     ~ConsumerApp() = default;
 
     // Factory call to Create Consumer

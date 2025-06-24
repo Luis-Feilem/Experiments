@@ -9,7 +9,7 @@ public:
 
     static void registerConsumer(const std::string& name, CreateFunc func);
 
-    static std::unique_ptr<IConsumer> create(const std::string& name, Logger console);
+    static std::unique_ptr<IConsumer> create(const std::string& name, Logger logger);
 
     static void debug_print_registry(Logger& logger);
 

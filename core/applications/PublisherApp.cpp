@@ -134,7 +134,7 @@ void PublisherApp::publish_on_topic(std::string topic, Payload message){
     logger.log_info("[PublisherApp] Publishing," + message.message_id + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);
-    publisher->send_message(message, topic);
+    publisher->send_message(message, topic); // technology-specific send
     logger.log_info("[PublisherApp] Published," + message.message_id + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);

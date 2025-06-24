@@ -4,7 +4,7 @@
 
 void ConsumerApp::create_consumer() {
     std::string technology = std::getenv("TECHNOLOGY");
-    console.log_debug("[ConsumerApp] Creating consumer for technology " + technology + ", log_level: " + Logger::level_to_string(console.get_level()));
+    logger.log_debug("[ConsumerApp] Creating consumer for technology " + technology + ", log_level: " + Logger::level_to_string(logger.get_level()));
     std::string tech_lib;
 #ifdef _WIN32
     tech_lib = technology + "_technology.dll";  // or with full path
@@ -12,41 +12,43 @@ void ConsumerApp::create_consumer() {
     tech_lib = "/app/lib/lib"+ technology + "_technology.so";
 #endif
 
-    TechnologyLoader::load_technology(tech_lib, console);
+    TechnologyLoader::load_technology(tech_lib, logger);
 
-    consumer = ConsumerFactory::create(technology, console);
-    console.log_debug("[ConsumerApp] Created " + technology + " consumer");
+    consumer = ConsumerFactory::create(technology, logger);
+    logger.log_debug("[ConsumerApp] Created " + technology + " consumer");
 }
 
 // Initializes and runs the consumer logic
 void ConsumerApp::run() {
-    console.log_info("[ConsumerApp] Initializing");
+    logger.log_info("[ConsumerApp] Initializing");
     consumer->initialize();
     int sleep_time = 4000; // milliseconds
+
+    // Determine if technology follows p2p or brokered pattern to decide how to synchronize start-up of publisher vs consumer
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology.find("p2p") == std::string::npos) {
         // wait for publisher to send the first message and the broker to create the topic
-        console.log_info("[ConsumerApp] Initialized," + std::to_string(sleep_time));
+        logger.log_info("[ConsumerApp] Initialized," + std::to_string(sleep_time));
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     } else {
         // p2p technologies do not need this, as they are not brokered
-        console.log_info("[ConsumerApp] Initialized,0");
+        logger.log_info("[ConsumerApp] Initialized,0"); 
     }
     while (true) {
-        console.log_debug("[ConsumerApp] Waiting for message...");
-        Payload message = consumer->receive_message();
+        logger.log_debug("[ConsumerApp] Waiting for message...");
+        Payload message = consumer->receive_message(); // technology-specific receive
         if (message.message_id == ""){
-            console.log_info("[ConsumerApp] Received message with no label -> Retrying.");
-            continue;
+            logger.log_info("[ConsumerApp] Received message with no label -> Retrying.");
+            continue; //todo: add maximum retries?
         }
         if (message.message_id.find(TERMINATION_SIGNAL) != std::string::npos) {
-            console.log_info("[ConsumerApp] Termination," + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
+            logger.log_info("[ConsumerApp] Termination," + std::to_string(consumer->get_terminated_streams_size()) + "/" + std::to_string(consumer->get_subscribed_streams_size()));
             if (consumer->get_terminated_streams_size() >= consumer->get_subscribed_streams_size()) {
                 break; // All streams terminated
             }
             continue;
         }
-        console.log_info("[ConsumerApp] Update," + message.message_id + "," + std::to_string(message.data_size));
+        logger.log_info("[ConsumerApp] Update," + message.message_id + "," + std::to_string(message.data_size));
     }
 }
 

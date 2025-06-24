@@ -8,13 +8,13 @@
 
 class IConsumer {
 protected:
-    Logger console;
+    Logger logger;
     std::set<std::pair<std::string, std::string>> terminated_streams;
     std::set<std::pair<std::string, std::string>> subscribed_streams;
 
 public:
-    inline IConsumer(const Logger& logger) {
-        console = logger;
+    inline IConsumer(const Logger& loggerp) {
+        logger = loggerp;
     }
     virtual ~IConsumer() = default;
 

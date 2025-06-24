@@ -7,7 +7,7 @@
 #endif
 
 bool TechnologyLoader::load_technology(const std::string& lib_name, Logger logger) {
-
+//todo: error handling?
 #ifdef _WIN32
     HMODULE lib_handle = LoadLibraryA(lib_name.c_str());
     if (!lib_handle) {
