@@ -11,6 +11,11 @@ T from_string(const std::string& str, T default_value) {
     return result;
 }
 
+Payload PublisherApp::generate_message(int i){
+    Payload message = pick_random_payload();
+    return Payload::reuse_with_new_id(id, i, message);
+}
+
 // Generate termination message
 Payload PublisherApp::generate_termination_message(){
     return Payload::make(id, 0, 0, PayloadKind::TERMINATION);
@@ -31,7 +36,7 @@ const Payload& PublisherApp::pick_random_payload() {
 }
 
 PublisherApp::PublisherApp(Logger::LogLevel log_level){
-    console = Logger(log_level);
+    logger = Logger(log_level);
     load_from_env();
     generate_payloads(payload_size, payload_samples);
 }
@@ -49,37 +54,37 @@ void PublisherApp::load_from_env() {
         std::string err_msg;
         if (std::string(env_id).empty()){
             err_msg = "[PublisherApp] Missing required environment variable CONTAINER_ID";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_topics).empty()){
             err_msg = "[PublisherApp] Missing required environment variable TOPICS";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_update).empty()){
             err_msg = "[PublisherApp] Missing required environment variable UPDATE_EVERY";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_psize).empty()){
             err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_SIZE";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_psamp).empty()){
             err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_SAMPLES";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else if(std::string(env_pkind).empty()){
             err_msg = "[PublisherApp] Missing required environment variable PAYLOAD_KIND";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
         else{
             err_msg = "[PublisherApp] Unknown error related to environment variables";
-            console.log_error(err_msg);
+            logger.log_error(err_msg);
             throw std::runtime_error(err_msg);
         }
     }
@@ -93,7 +98,7 @@ void PublisherApp::load_from_env() {
     payload_samples = std::atoi(std::getenv("PAYLOAD_SAMPLES"));
     payload_kind = Payload::string_to_payloadkind(std::getenv("PAYLOAD_KIND"));
 
-    console.log_debug("[PublisherApp] Loaded from environment: ID=" + id 
+    logger.log_debug("[PublisherApp] Loaded from environment: ID=" + id 
         + ", TOPICS=" + topics 
         + ", MESSAGES=" + std::to_string(message_count)
         + ", DURATION=" + std::to_string(duration)
@@ -108,7 +113,7 @@ void PublisherApp::load_from_env() {
 // Factory Method to Create Publisher
 void PublisherApp::create_publisher() {
     std::string technology = std::getenv("TECHNOLOGY");
-    console.log_debug("[PublisherApp] Creating publisher for technology " + technology + ", log_level: " + Logger::level_to_string(console.get_level()));
+    logger.log_debug("[PublisherApp] Creating publisher for technology " + technology + ", log_level: " + Logger::level_to_string(logger.get_level()));
     std::string tech_lib;
 #ifdef _WIN32
     tech_lib = technology + "_technology.dll";  // or with full path
@@ -116,42 +121,41 @@ void PublisherApp::create_publisher() {
     tech_lib = "/app/lib/lib"+ technology + "_technology.so";
 #endif
 
-    TechnologyLoader::load_technology(tech_lib, console);
-    console.log_debug("[PublisherApp] Factory state before calling 'create'");
-    PublisherFactory::debug_print_registry(console);
+    TechnologyLoader::load_technology(tech_lib, logger);
+    logger.log_debug("[PublisherApp] Factory state before calling 'create'");
+    PublisherFactory::debug_print_registry(logger);
     
-    publisher = PublisherFactory::create(technology, console);
-    console.log_debug("[PublisherApp] Created " + technology + " publisher");
+    publisher = PublisherFactory::create(technology, logger);
+    logger.log_debug("[PublisherApp] Created " + technology + " publisher");
 }
 
-void PublisherApp::publish_on_topic(std::string topic, int i){
+void PublisherApp::publish_on_topic(std::string topic, Payload message){
     const Payload& base = pick_random_payload();
-    Payload message = Payload::reuse_with_new_id(id, i, base.data, base.kind);
-    console.log_info("[PublisherApp] Publishing," + std::to_string(i) + 
+    logger.log_info("[PublisherApp] Publishing," + message.message_id + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);
     publisher->send_message(message, topic);
-    console.log_info("[PublisherApp] Published," + std::to_string(i) + 
+    logger.log_info("[PublisherApp] Published," + message.message_id + 
                       "," + std::to_string(base.data_size) + 
                       "," + topic);
 }
 
-void PublisherApp::publish_on_all_topics(int i){
+void PublisherApp::publish_on_all_topics(Payload message){
     try {
         std::istringstream ss(topics);
         std::string topic;
         while (std::getline(ss, topic, ',')) {
-            publish_on_topic(topic, i);
+            publish_on_topic(topic, message);
         }
     } catch (const std::exception& e){
-        console.log_error("[Publisher App] Exception during publish: " + std::string(e.what()));
+        logger.log_error("[Publisher App] Exception during publish: " + std::string(e.what()));
     }
 }
 
 void PublisherApp::terminate_topic(std::string topic){
-    console.log_info("[PublisherApp] Closing," + topic);
+    logger.log_info("[PublisherApp] Closing," + topic);
     publisher->send_message(generate_termination_message(), topic);
-    console.log_info("[PublisherApp] Closed," + topic);
+    logger.log_info("[PublisherApp] Closed," + topic);
 }
 
 void PublisherApp::terminate_all_topics(){
@@ -164,47 +168,53 @@ void PublisherApp::terminate_all_topics(){
 
 // Runs the publisher logic (can now be fully generalized)
 void PublisherApp::run() {
-    console.log_info("[PublisherApp] Initializing");
-    publisher->initialize();
+    logger.log_info("[PublisherApp] Initializing");
+    publisher->initialize(); // Technology-specific initialization
     int sleep_time = 4000; // milliseconds
+
+    // Determine if technology follows p2p or brokered pattern to decide how to synchronize start-up of publisher vs consumer
     std::string technology = std::getenv("TECHNOLOGY");
     if (technology.find("p2p") != std::string::npos) {
         // wait for consumer to connect before starting to send messages
-        console.log_info("[PublisherApp] Initialized," + std::to_string(sleep_time));
+        logger.log_info("[PublisherApp] Initialized," + std::to_string(sleep_time));
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     } else {
         // brokered technologies do not need this
-        console.log_info("[PublisherApp] Initialized,0");
+        logger.log_info("[PublisherApp] Initialized,0");
     }
 
+    // A run's goal is either to send a number of messages or to run for a set duration
     if (message_count > 0) {
-        console.log_info("[PublisherApp] Goal: " + std::to_string(message_count) 
+        logger.log_info("[PublisherApp] Goal: " + std::to_string(message_count) 
             + " messages," + std::to_string(update_every) + " us"
         );
         run_messages();
     }
     else if (duration > 0) {
-        console.log_info("[PublisherApp] Goal: " + std::to_string(duration) 
+        logger.log_info("[PublisherApp] Goal: " + std::to_string(duration) 
             + " seconds," + std::to_string(update_every) + " us"
         );
         run_duration();
     }
     else{
-        console.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive values. No messages are sent.");
+        logger.log_error("[PublisherApp] Neither MESSAGES nor DURATION are positive integer values. No messages are sent.");
+        return;
     }
     // Send termination signal (poison pill)
-    console.log_info("[PublisherApp] Terminating");	
+    logger.log_info("[PublisherApp] Terminating");	
     terminate_all_topics();
-    console.log_info("[PublisherApp] Terminated");
+    logger.log_info("[PublisherApp] Terminated");
 }
 
 void PublisherApp::run_messages(){
     int i = 1;
+    Payload message;
     while (i <= message_count) {
-        console.log_info("[PublisherApp] Sending message " + std::to_string(i));
+        message = generate_message(i);
+        logger.log_info("[PublisherApp] Sending message " + std::to_string(i));
         // std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-        publish_on_all_topics(i);
-        console.log_info("[PublisherApp] Sent message " + std::to_string(i));
+        publish_on_all_topics(message);
+        logger.log_info("[PublisherApp] Sent message " + std::to_string(i));
         i++;
         // If you want to simulate a data generating system, uncomment this section
         // if (i < message_count){
@@ -220,12 +230,14 @@ void PublisherApp::run_duration(){
     auto end_time = start_time + seconds(duration);
 
     int i = 0;
+    Payload message;
     while (steady_clock::now() < end_time) {
-        console.log_info("[PublisherApp] Sending message " + std::to_string(i + 1));
+        message = generate_message(i);
+        logger.log_info("[PublisherApp] Sending message " + std::to_string(i + 1));
         // std::string message = "Message " + std::to_string(i + 1) + " [END] to topics: " + topics;
-        publish_on_all_topics(i);
-        console.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
-        console.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
+        publish_on_all_topics(message);
+        logger.log_info("[PublisherApp] Sent message " + std::to_string(i + 1));
+        logger.log_debug("[PublisherApp] Now sleeping for " + std::to_string(update_every) + "us");
         std::this_thread::sleep_for(microseconds(update_every));
 
         ++i;

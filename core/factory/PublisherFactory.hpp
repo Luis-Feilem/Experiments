@@ -6,11 +6,11 @@
 
 class PublisherFactory {
 public:
-    using CreateFunc = std::unique_ptr<IPublisher>(*)(Logger console);
+    using CreateFunc = std::unique_ptr<IPublisher>(*)(Logger logger);
 
     static void registerPublisher(const std::string& name, CreateFunc func);
 
-    static std::unique_ptr<IPublisher> create(const std::string& name, Logger console);
+    static std::unique_ptr<IPublisher> create(const std::string& name, Logger logger);
 
     static void debug_print_registry(Logger& logger);
 private:

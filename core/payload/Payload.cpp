@@ -7,7 +7,7 @@ Payload Payload::make(const std::string& publisher_id, int sequence_number, size
 
     switch (kind) {
         case PayloadKind::TERMINATION:
-            p.message_id = publisher_id + ":" + TERMINATION_SIGNAL;
+            p.message_id = publisher_id + ":" + TERMINATION_SIGNAL; // todo: why : instead of -?
             p.data = { 0xFF }; // Termination signal
             p.data_size = 1;
             return p;
@@ -34,12 +34,12 @@ Payload Payload::make(const std::string& publisher_id, int sequence_number, size
     return p;
 }
 
-Payload Payload::reuse_with_new_id(const std::string& publisher_id, int sequence_number, const std::vector<uint8_t>& data, PayloadKind kind) {
+Payload Payload::reuse_with_new_id(const std::string& publisher_id, int sequence_number, Payload message) {
     Payload p;
     p.message_id = publisher_id + "-" + std::to_string(sequence_number);
-    p.kind = kind;
-    p.data = data;
-    p.data_size = data.size();
+    p.kind = message.kind;
+    p.data = message.data;
+    p.data_size = message.data.size();
     return p;
 }
 

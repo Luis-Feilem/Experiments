@@ -28,7 +28,7 @@ protected:
     PayloadKind payload_kind;
     std::vector<Payload> payloads;
 
-    Logger console;
+    Logger logger;
 
     std::unique_ptr<IPublisher> publisher;
 
@@ -48,13 +48,13 @@ public:
 
 private:
     // Send update on topic
-    void publish_on_topic(std::string topic, int i);
+    void publish_on_topic(std::string topic, Payload message);
 
     // Terminate topic
     void terminate_topic(std::string topic);
 
     // Send update on all topics
-    void publish_on_all_topics(int i);
+    void publish_on_all_topics(Payload message);
 
     // Terminate all topics
     void terminate_all_topics();
@@ -64,6 +64,8 @@ private:
 
     // Runs for a set duration
     void run_duration();
+
+    Payload generate_message(int i);
 
     Payload generate_termination_message();
 

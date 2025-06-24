@@ -7,11 +7,11 @@
 
 class IPublisher {
 protected:
-    Logger console;
+    Logger logger;
     
 public:
-    IPublisher(const Logger& logger) {
-        console = logger;
+    IPublisher(const Logger& loggerp) {
+        logger = loggerp;
     }
     virtual ~IPublisher() = default;
 
