@@ -21,7 +21,7 @@ private:
     void log_configuration() override;
 
 public:
-    ZeroMQP2PPublisher(const Logger& logger);
+    ZeroMQP2PPublisher(std::shared_ptr<Logger> logger);
     ~ZeroMQP2PPublisher();
 
     void initialize() override;

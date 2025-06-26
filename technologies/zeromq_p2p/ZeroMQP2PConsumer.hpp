@@ -16,7 +16,7 @@ private:
     std::set<std::string> unique_publishers;
 
 public:
-    ZeroMQP2PConsumer(const Logger& logger);
+    ZeroMQP2PConsumer(std::shared_ptr<Logger> logger);
     ~ZeroMQP2PConsumer();
 
     void initialize() override;

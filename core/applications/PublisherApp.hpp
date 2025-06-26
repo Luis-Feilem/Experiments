@@ -28,7 +28,7 @@ protected:
     PayloadKind payload_kind;
     std::vector<Payload> payloads;
 
-    Logger logger;
+    std::shared_ptr<Logger> logger;
 
     std::unique_ptr<IPublisher> publisher;
 

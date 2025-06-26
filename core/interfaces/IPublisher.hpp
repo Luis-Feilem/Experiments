@@ -2,12 +2,13 @@
 #define IPUBLISHER_HPP
 
 #include <string>
+#include <memory>
 #include "Logger.hpp"
 #include "Payload.h"
 
 class IPublisher {
 protected:
-    Logger logger;
+    std::shared_ptr<Logger> logger;
     
 private:
     // Serializes a Payload object to a string format
@@ -17,7 +18,7 @@ private:
     virtual void log_configuration() = 0;
 
 public:
-    IPublisher(const Logger& loggerp) {
+    IPublisher(std::shared_ptr<Logger> loggerp) {
         logger = loggerp;
     }
     virtual ~IPublisher() = default;

@@ -3,17 +3,25 @@
 
 #include <string>
 #include <set>
+#include <memory>
 #include "Logger.hpp"
 #include "Payload.h"
 
 class IConsumer {
 protected:
-    Logger logger;
+    std::shared_ptr<Logger> logger;
     std::set<std::pair<std::string, std::string>> terminated_streams;
     std::set<std::pair<std::string, std::string>> subscribed_streams;
 
+private:
+    // Log consumer configuration during runtime
+    virtual void log_configuration() = 0;
+
+    // Deserializes a message from a string format to a Payload object
+    virtual Payload deserialize(const std::string& raw_message) = 0;
+
 public:
-    inline IConsumer(const Logger& loggerp) {
+    IConsumer(std::shared_ptr<Logger> loggerp) {
         logger = loggerp;
     }
     virtual ~IConsumer() = default;
@@ -24,14 +32,9 @@ public:
     // Subscribes to a topic (if applicable)
     virtual void subscribe(const std::string &topic) = 0;
 
-    // Deserializes a message from a string format to a Payload object
-    virtual Payload deserialize(const std::string& raw_message) = 0;
-
     // Receives a message (blocking or non-blocking depending on implementation)
     virtual Payload receive_message() = 0;
 
-    // Log consumer configuration during runtime
-    virtual void log_configuration() = 0;
 
     int get_subscribed_streams_size() const {
         return static_cast<int>(subscribed_streams.size());

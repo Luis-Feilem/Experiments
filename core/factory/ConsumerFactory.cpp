@@ -9,7 +9,7 @@ void ConsumerFactory::registerConsumer(const std::string& name, CreateFunc func)
     getRegistry()[name] = func;
 }
 
-std::unique_ptr<IConsumer> ConsumerFactory::create(const std::string& name, Logger logger) {
+std::unique_ptr<IConsumer> ConsumerFactory::create(const std::string& name, std::shared_ptr<Logger> logger) {
     auto it = getRegistry().find(name);
     if (it != getRegistry().end()) {
         return it->second(logger);
@@ -17,9 +17,9 @@ std::unique_ptr<IConsumer> ConsumerFactory::create(const std::string& name, Logg
     throw std::runtime_error("Consumer type not registered");
 }
 
-void ConsumerFactory::debug_print_registry(Logger& logger) {
-    logger.log_debug("[ConsumerFactory] Registered consumer types:");
+void ConsumerFactory::debug_print_registry(std::shared_ptr<Logger> logger) {
+    logger->log_debug("[ConsumerFactory] Registered consumer types:");
     for (const auto& entry : getRegistry()) {
-        logger.log_debug(" - " + entry.first);
+        logger->log_debug(" - " + entry.first);
     }
 }

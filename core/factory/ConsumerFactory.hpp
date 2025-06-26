@@ -5,13 +5,13 @@
 
 class ConsumerFactory {
 public:
-    using CreateFunc = std::unique_ptr<IConsumer>(*)(const Logger&);
+    using CreateFunc = std::unique_ptr<IConsumer>(*)(std::shared_ptr<Logger>);
 
     static void registerConsumer(const std::string& name, CreateFunc func);
 
-    static std::unique_ptr<IConsumer> create(const std::string& name, Logger logger);
+    static std::unique_ptr<IConsumer> create(const std::string& name, std::shared_ptr<Logger> logger);
 
-    static void debug_print_registry(Logger& logger);
+    static void debug_print_registry(std::shared_ptr<Logger> logger);
 
 private:
     static std::unordered_map<std::string, CreateFunc>& getRegistry();
