@@ -7,7 +7,7 @@
 
 class KafkaPublisher : public IPublisher {
 public:
-    KafkaPublisher(const Logger& logger);
+    KafkaPublisher(std::shared_ptr<Logger> logger);
     ~KafkaPublisher() override;
 
     void initialize() override;

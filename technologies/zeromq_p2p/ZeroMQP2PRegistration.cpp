@@ -2,7 +2,6 @@
 #include "./ZeroMQP2PPublisher.hpp"
 #include "ConsumerFactory.hpp"
 #include "./ZeroMQP2PConsumer.hpp"
-#include "Logger.hpp"
 
 extern "C" void register_technology(std::shared_ptr<Logger> logger) {
     PublisherFactory::registerPublisher("zeromq_p2p", [](std::shared_ptr<Logger> logger) -> std::unique_ptr<IPublisher> {

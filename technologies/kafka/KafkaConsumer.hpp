@@ -8,7 +8,7 @@
 
 class KafkaConsumer : public IConsumer {
 public:
-    KafkaConsumer(const Logger& logger);
+    KafkaConsumer(std::shared_ptr<Logger> logger);
     ~KafkaConsumer() override;
 
     void initialize() override;
