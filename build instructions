@@ -11,10 +11,10 @@ build\technologies\zeromq\ZeroMQPublisherTest.exe
 
 
 # To build the base image
-docker build -f core\Dockerfile.base -t base-image .
-docker build -f technologies\zeromq\Dockerfile.ZeroMQ -t zeromq-image .
-docker build -f technologies\zeromq\Dockerfile.ZeroMQPublisher -t zeromq-publisher .
-docker build -f technologies\zeromq\Dockerfile.ZeroMQConsumer -t zeromq-consumer .
+docker build -f core\Dockerfile.base -t core_base .
+docker build -f technologies\zeromq\Dockerfile.ZeroMQ -t zeromq_p2p_base .
+docker build -f technologies\zeromq\Dockerfile.ZeroMQPublisher -t zeromq_p2p_publisher .
+docker build -f technologies\zeromq\Dockerfile.ZeroMQConsumer -t zeromq_p2p_consumer .
 
 # To create a docker network
 docker network create benchmark-net
